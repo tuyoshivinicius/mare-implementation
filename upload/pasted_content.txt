@@ -1,0 +1,88 @@
+# 🧩 **Análise & Desenvolvimento CLI Python com LangChain/LangGraph (Framework MARE)**
+
+---
+
+## 🎯 **Objetivos Principais**
+
+### 📚 **Etapa 1: Análise Contextual do Paper MARE**
+
+* **Contexto RE**: Explique sucintamente o contexto e os desafios principais abordados pelo framework MARE (Multi-Agent Collaboration for Requirements Engineering).
+* **Estrutura dos Agentes**: Liste e descreva brevemente os **5 agentes** essenciais:
+
+  * Stakeholder, Collector, Modeler, Checker, Documenter.
+* **Ações Principais**: Identifique as **9 ações específicas** realizadas pelos agentes.
+* **Workspace Colaborativo**: Defina claramente a função e a dinâmica do workspace compartilhado (JSON/SQLite) para troca e versionamento dos artefatos gerados.
+* **Fluxo Completo**: Explique brevemente as etapas sequenciais e iterativas do fluxo do MARE (**Elicitação → Modelagem → Verificação → Especificação**).
+* **Avaliação e Métricas**: Sintetize as métricas de performance do modelo (**Precision, Recall, F1-score**) com destaque para o ganho médio relatado (aproximadamente 15,4% superior às baselines).
+* **Referências rápidas**:
+
+  * Paper oficial: [https://arxiv.org/abs/2405.03256](https://arxiv.org/abs/2405.03256)
+  * PDF para consulta local: `2405.03256v1.pdf`
+
+---
+
+### 💻 **Etapa 2: Desenvolvimento da CLI com Python & LangChain/LangGraph**
+
+* **Estrutura básica da CLI** (foco claro e objetivo):
+
+  * Comandos essenciais:
+
+    * `init`: Inicializa projeto com estrutura padrão.
+    * `run`: Executa o pipeline completo (multi-agentes).
+    * `status`: Mostra estado atual do pipeline (artefatos e progresso).
+    * `export`: Gera exportação final (SRS em JSON, Markdown ou TXT).
+
+* **Pipeline Multi-agente com LangGraph**:
+
+  * Modele o pipeline do MARE usando grafos LangGraph.
+  * Crie cada agente como um módulo LangChain isolado, com prompts específicos e memória integrada.
+
+* **Gestão do Workspace Compartilhado**:
+
+  * Configure workspace em JSON ou SQLite com versionamento automático para rastrear artefatos intermediários.
+
+* **Detalhes da implementação do Pipeline**:
+
+  1. **Elicitação**:
+
+     * Stakeholder e Collector capturam e refinam requisitos.
+  2. **Modelagem**:
+
+     * Modeler gera artefatos estruturados conforme o metamodelo definido.
+  3. **Verificação**:
+
+     * Checker valida artefatos gerados quanto à completude e consistência.
+  4. **Especificação**:
+
+     * Documenter gera SRS final ou relatório de refinamento.
+
+---
+
+## ✅ **Critérios Claros para Entrega**
+
+* Fidelidade ao paper original (fluxo, ações e estrutura do MARE).
+* Código modular, limpo e documentado.
+* Pipeline claramente definido via LangGraph.
+* Workspace funcional com rastreabilidade dos artefatos.
+* CLI intuitiva, bem documentada, com exemplos no README.
+
+---
+
+## 📂 **Estrutura Recomendada**
+
+```
+mare_cli/
+├── agents/
+│   ├── stakeholder_agent.py
+│   ├── collector_agent.py
+│   ├── modeler_agent.py
+│   ├── checker_agent.py
+│   └── documenter_agent.py
+├── workspace/
+│   ├── workspace_store.json
+│   └── versioning.py
+├── pipelines/
+│   └── mare_pipeline.py
+├── cli.py
+└── README.md
+```
