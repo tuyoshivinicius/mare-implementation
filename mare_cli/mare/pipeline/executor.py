@@ -75,11 +75,12 @@ class PipelineExecutor(MARELoggerMixin):
             agent_configs=agent_settings
         )
     
-    def execute_full_pipeline(
+    def execute_pipeline(
         self,
-        input_file: Optional[Path] = None,
+        input_file: Optional[str] = None,
         interactive: bool = False,
-        max_iterations: Optional[int] = None
+        max_iterations: Optional[int] = None,
+        timeout: Optional[int] = 300  # 5 minutes default timeout
     ) -> Dict[str, Any]:
         """
         Execute the complete MARE pipeline.
@@ -88,13 +89,35 @@ class PipelineExecutor(MARELoggerMixin):
             input_file: Optional input file with requirements
             interactive: Run in interactive mode
             max_iterations: Override max iterations
+            timeout: Maximum execution time in seconds
             
         Returns:
             Execution results
         """
+        import signal
+        import time
+        
         self.log_info("Starting full pipeline execution")
         
+        # Check for recent successful execution
+        recent_execution = self._check_recent_execution()
+        if recent_execution and recent_execution.get('status') == 'completed':
+            quality_score = recent_execution.get('quality_score', 0)
+            if quality_score >= self.pipeline_config.quality_threshold:
+                self.log_info(f"Found recent successful execution with quality {quality_score}")
+                return recent_execution
+        
         try:
+            # Set timeout handler
+            def timeout_handler(signum, frame):
+                raise TimeoutError(f"Pipeline execution timed out after {timeout} seconds")
+            
+            if timeout:
+                signal.signal(signal.SIGALRM, timeout_handler)
+                signal.alarm(timeout)
+            
+            start_time = time.time()
+            
             # Update configuration if needed
             if max_iterations is not None:
                 self.pipeline_config.max_iterations = max_iterations
@@ -105,7 +128,7 @@ class PipelineExecutor(MARELoggerMixin):
             project_name = self.project_config.get("project", {}).get("name", "Unnamed Project")
             domain = self._infer_domain()
             
-            # Execute pipeline
+            # Execute pipeline with progress monitoring
             self.log_info(f"Executing pipeline for: {project_name}")
             final_state = self.pipeline.execute(
                 system_idea, 
@@ -114,10 +137,17 @@ class PipelineExecutor(MARELoggerMixin):
                 workspace_path=self.workspace_path
             )
             
+            execution_time = time.time() - start_time
+            self.log_info(f"Pipeline completed in {execution_time:.2f} seconds")
+            
+            # Cancel timeout
+            if timeout:
+                signal.alarm(0)
+            
             # Save results
             self._save_execution_results(final_state)
             
-            # Prepare return data
+            # Prepare return datata
             result = {
                 "status": final_state["status"].value,
                 "execution_id": final_state["execution_id"],
@@ -164,6 +194,40 @@ class PipelineExecutor(MARELoggerMixin):
         # For now, this is a placeholder - full implementation would require
         # more complex state management and partial execution capabilities
         raise NotImplementedError("Phase-specific execution not yet implemented")
+    
+    def _check_recent_execution(self) -> Optional[Dict[str, Any]]:
+        """Check for recent successful execution within the last hour."""
+        try:
+            from datetime import datetime, timedelta
+            import json
+            
+            executions_file = self.workspace_path / "executions.json"
+            if not executions_file.exists():
+                return None
+            
+            with open(executions_file, 'r') as f:
+                executions = json.load(f)
+            
+            if not executions:
+                return None
+            
+            # Get most recent execution
+            latest = executions[-1]
+            
+            # Check if it's within the last hour and successful
+            execution_time = datetime.fromisoformat(latest['timestamp'].replace('Z', '+00:00'))
+            one_hour_ago = datetime.now().replace(tzinfo=execution_time.tzinfo) - timedelta(hours=1)
+            
+            if (execution_time > one_hour_ago and 
+                latest.get('status') == 'completed' and 
+                latest.get('quality_score', 0) >= self.pipeline_config.quality_threshold):
+                return latest
+            
+            return None
+            
+        except Exception as e:
+            self.log_error(f"Error checking recent execution: {e}")
+            return None
     
     def _get_system_idea(self, input_file: Optional[Path] = None) -> str:
         """Get system idea from input file or default location."""

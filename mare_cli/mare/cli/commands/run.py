@@ -24,7 +24,8 @@ def run_command(
     phase: Optional[str],
     interactive: bool,
     input_file: Optional[str],
-    max_iterations: int
+    max_iterations: int,
+    timeout: int = 300
 ) -> None:
     """
     Execute the MARE pipeline.
@@ -89,10 +90,11 @@ def run_command(
             task_exec = progress.add_task("Executing pipeline...", total=100)
             
             # Execute the pipeline
-            result = executor.execute_full_pipeline(
+            result = executor.execute_pipeline(
                 input_file=input_path,
                 interactive=interactive,
-                max_iterations=max_iterations
+                max_iterations=max_iterations,
+                timeout=timeout
             )
             
             progress.update(task_init, completed=100)
