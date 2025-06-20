@@ -1,6 +1,6 @@
 """
-MARE CLI - Init command implementation
-Handles project initialization and setup
+MARE CLI - Implementação do comando init
+Gerencia inicialização e configuração de projetos
 """
 
 import os
@@ -31,28 +31,28 @@ def init_command(
     force: bool
 ) -> None:
     """
-    Initialize a new MARE project.
+    Inicializa um novo projeto MARE.
     
     Args:
-        ctx: Click context object
-        project_name: Name of the project to create
-        template: Project template to use
-        llm_provider: LLM provider to configure
-        force: Force initialization even if directory exists
+        ctx: Objeto de contexto do Click
+        project_name: Nome do projeto a ser criado
+        template: Template de projeto a ser usado
+        llm_provider: Provedor de LLM a ser configurado
+        force: Força inicialização mesmo se o diretório existir
     """
-    logger.info("Starting project initialization")
+    logger.info("Iniciando inicialização do projeto")
     
-    # Determine project name and path
+    # Determina nome e caminho do projeto
     if project_name is None:
-        project_name = click.prompt("Enter project name")
+        project_name = click.prompt("Digite o nome do projeto")
     
     project_path = Path.cwd() / project_name
     
-    # Check if project already exists
+    # Verifica se o projeto já existe
     if project_path.exists() and not force:
-        if not click.confirm(f"Directory '{project_name}' already exists. Continue?"):
+        if not click.confirm(f"Diretório '{project_name}' já existe. Continuar?"):
             raise ProjectInitializationError(
-                "Project initialization cancelled by user",
+                "Inicialização do projeto cancelada pelo usuário",
                 str(project_path)
             )
     
@@ -63,49 +63,50 @@ def init_command(
             console=console
         ) as progress:
             
-            # Create project structure
-            task1 = progress.add_task("Creating project structure...", total=None)
+            # Cria estrutura do projeto
+            task1 = progress.add_task("Criando estrutura do projeto...", total=None)
             _create_project_structure(project_path)
             progress.update(task1, completed=True)
             
-            # Generate configuration
-            task2 = progress.add_task("Generating configuration...", total=None)
+            # Gera configuração
+            task2 = progress.add_task("Gerando configuração...", total=None)
             _create_project_config(project_path, template, llm_provider)
             progress.update(task2, completed=True)
             
-            # Initialize workspace
-            task3 = progress.add_task("Initializing workspace...", total=None)
+            # Inicializa workspace
+            task3 = progress.add_task("Inicializando workspace...", total=None)
             _initialize_workspace(project_path)
             progress.update(task3, completed=True)
             
-            # Create example files
-            task4 = progress.add_task("Creating example files...", total=None)
+            # Cria arquivos de exemplo
+            task4 = progress.add_task("Criando arquivos de exemplo...", total=None)
             _create_example_files(project_path, template, llm_provider)
             progress.update(task4, completed=True)
         
-        # Success message
+        # Mensagem de sucesso
         console.print(Panel(
-            f"[green]✓[/green] Project '{project_name}' initialized successfully!\n\n"
-            f"[bold]Next steps:[/bold]\n"
+            f"[green]✓[/green] Projeto '{project_name}' inicializado com sucesso!\n\n"
+            f"[bold]Próximos passos:[/bold]\n"
             f"1. cd {project_name}\n"
-            f"2. Configure your LLM API keys in .mare/config.yaml\n"
-            f"3. Run 'mare run' to start processing requirements\n\n"
-            f"[dim]Template: {template} | LLM Provider: {llm_provider}[/dim]",
-            title="[bold green]Project Initialized[/bold green]",
+            f"2. Configure suas chaves de API LLM em .mare/config.yaml\n"
+            f"3. Execute 'mare run' para começar a processar requisitos\n\n"
+            f"[dim]Template: {template} | Provedor LLM: {llm_provider}[/dim]",
+            title="[bold green]Projeto Inicializado[/bold green]",
             border_style="green"
         ))
         
-        logger.info(f"Project '{project_name}' initialized successfully at {project_path}")
+        logger.info(f"Projeto '{project_name}' inicializado com sucesso em {project_path}")
+        return True
         
     except Exception as e:
-        logger.error(f"Failed to initialize project: {e}")
+        logger.error(f"Falha ao inicializar projeto: {e}")
         raise ProjectInitializationError(
-            f"Failed to initialize project: {e}",
+            f"Falha ao inicializar projeto: {e}",
             str(project_path)
         )
 
 def _create_project_structure(project_path: Path) -> None:
-    """Create the basic project directory structure."""
+    """Cria a estrutura básica de diretórios do projeto."""
     directories = [
         ".mare",
         ".mare/workspace",
@@ -120,9 +121,9 @@ def _create_project_structure(project_path: Path) -> None:
         ensure_directory(project_path / directory)
 
 def _create_project_config(project_path: Path, template: str, llm_provider: str) -> None:
-    """Create project configuration files."""
+    """Cria arquivos de configuração do projeto."""
     
-    # Main configuration
+    # Configuração principal
     config = {
         "project": {
             "name": project_path.name,
@@ -137,11 +138,11 @@ def _create_project_config(project_path: Path, template: str, llm_provider: str)
             "parameters": _get_default_parameters()
         },
         "agents": {
-            "stakeholder": {"enabled": True, "model": "default"},
-            "collector": {"enabled": True, "model": "default"},
-            "modeler": {"enabled": True, "model": "default"},
-            "checker": {"enabled": True, "model": "default"},
-            "documenter": {"enabled": True, "model": "default"}
+            "stakeholder": {"enabled": True, "model": "gpt-3.5-turbo"},
+            "collector": {"enabled": True, "model": "gpt-3.5-turbo"},
+            "modeler": {"enabled": True, "model": "gpt-4"},
+            "checker": {"enabled": True, "model": "gpt-4"},
+            "documenter": {"enabled": True, "model": "gpt-3.5-turbo"}
         },
         "pipeline": {
             "max_iterations": 5,
@@ -157,27 +158,27 @@ def _create_project_config(project_path: Path, template: str, llm_provider: str)
     
     write_yaml_file(project_path / ".mare" / "config.yaml", config)
     
-    # Environment template
-    env_template = f"""# MARE CLI Environment Configuration
-# Copy this file to .env and fill in your API keys
+    # Template de ambiente
+    env_template = f"""# Configuração de Ambiente MARE CLI
+# Copie este arquivo para .env e preencha suas chaves de API
 
-# LLM Provider Configuration
+# Configuração do Provedor LLM
 MARE_LLM_PROVIDER={llm_provider}
 
-# OpenAI Configuration (if using OpenAI)
-OPENAI_API_KEY=your_openai_api_key_here
+# Configuração OpenAI (se usando OpenAI)
+OPENAI_API_KEY=sua_chave_api_openai_aqui
 
-# Anthropic Configuration (if using Anthropic)
-ANTHROPIC_API_KEY=your_anthropic_api_key_here
+# Configuração Anthropic (se usando Anthropic)
+ANTHROPIC_API_KEY=sua_chave_api_anthropic_aqui
 
-# Local LLM Configuration (if using local models)
+# Configuração LLM Local (se usando modelos locais)
 LOCAL_LLM_ENDPOINT=http://localhost:8000
 
-# Logging Configuration
+# Configuração de Logging
 MARE_LOG_LEVEL=INFO
 MARE_LOG_FILE=.mare/logs/mare.log
 
-# Workspace Configuration
+# Configuração do Workspace
 MARE_WORKSPACE_PATH=.mare/workspace
 """
     
@@ -185,7 +186,7 @@ MARE_WORKSPACE_PATH=.mare/workspace
         f.write(env_template)
 
 def _get_default_models(provider: str) -> dict:
-    """Get default model configuration for provider."""
+    """Obtém configuração padrão de modelos para o provedor."""
     models = {
         "openai": {
             "default": "gpt-3.5-turbo",
@@ -216,7 +217,7 @@ def _get_default_models(provider: str) -> dict:
     return models.get(provider, models["openai"])
 
 def _get_default_parameters() -> dict:
-    """Get default LLM parameters."""
+    """Obtém parâmetros padrão do LLM."""
     return {
         "temperature": 0.7,
         "max_tokens": 2048,
@@ -226,7 +227,7 @@ def _get_default_parameters() -> dict:
     }
 
 def _initialize_workspace(project_path: Path) -> None:
-    """Initialize the workspace database and structure."""
+    """Inicializa o banco de dados e estrutura do workspace."""
     workspace_config = {
         "version": "1.0.0",
         "created_at": "2025-06-20T05:00:00",
@@ -244,51 +245,51 @@ def _initialize_workspace(project_path: Path) -> None:
     )
 
 def _create_example_files(project_path: Path, template: str, llm_provider: str) -> None:
-    """Create example input files based on template."""
+    """Cria arquivos de exemplo de entrada baseados no template."""
     
     examples = {
-        "basic": """# Example Requirements Input
+        "basic": """# Exemplo de Entrada de Requisitos
 
-## System Overview
-I want to develop a simple task management system.
+## Visão Geral do Sistema
+Quero desenvolver um sistema simples de gerenciamento de tarefas.
 
 ## User Stories
-- As a user, I want to create tasks so that I can track my work
-- As a user, I want to mark tasks as complete so that I can see my progress
-- As a user, I want to delete tasks so that I can remove unnecessary items
+- Como usuário, quero criar tarefas para que eu possa acompanhar meu trabalho
+- Como usuário, quero marcar tarefas como concluídas para que eu possa ver meu progresso
+- Como usuário, quero deletar tarefas para que eu possa remover itens desnecessários
 """,
-        "web_app": """# Web Application Requirements
+        "web_app": """# Requisitos de Aplicação Web
 
-## System Overview
-I want to develop a web-based e-commerce platform for selling books online.
+## Visão Geral do Sistema
+Quero desenvolver uma plataforma de e-commerce baseada na web para vender livros online.
 
 ## User Stories
-- As a customer, I want to browse books by category so that I can find what I'm looking for
-- As a customer, I want to add books to my cart so that I can purchase multiple items
-- As a customer, I want to create an account so that I can track my orders
-- As an admin, I want to manage inventory so that I can keep track of stock levels
+- Como cliente, quero navegar livros por categoria para que eu possa encontrar o que estou procurando
+- Como cliente, quero adicionar livros ao meu carrinho para que eu possa comprar múltiplos itens
+- Como cliente, quero criar uma conta para que eu possa acompanhar meus pedidos
+- Como admin, quero gerenciar inventário para que eu possa controlar os níveis de estoque
 """,
-        "mobile_app": """# Mobile Application Requirements
+        "mobile_app": """# Requisitos de Aplicação Mobile
 
-## System Overview
-I want to develop a mobile fitness tracking application.
+## Visão Geral do Sistema
+Quero desenvolver um aplicativo móvel de acompanhamento de fitness.
 
 ## User Stories
-- As a user, I want to log my workouts so that I can track my fitness progress
-- As a user, I want to set fitness goals so that I can stay motivated
-- As a user, I want to view my progress charts so that I can see my improvement over time
-- As a user, I want to share my achievements so that I can motivate others
+- Como usuário, quero registrar meus treinos para que eu possa acompanhar meu progresso fitness
+- Como usuário, quero definir metas de fitness para que eu possa me manter motivado
+- Como usuário, quero visualizar gráficos de progresso para que eu possa ver minha melhoria ao longo do tempo
+- Como usuário, quero compartilhar minhas conquistas para que eu possa motivar outros
 """,
-        "enterprise": """# Enterprise System Requirements
+        "enterprise": """# Requisitos de Sistema Empresarial
 
-## System Overview
-I want to develop an enterprise resource planning (ERP) system for manufacturing companies.
+## Visão Geral do Sistema
+Quero desenvolver um sistema de planejamento de recursos empresariais (ERP) para empresas de manufatura.
 
 ## User Stories
-- As a manager, I want to track production schedules so that I can ensure timely delivery
-- As an employee, I want to log work hours so that payroll can be processed accurately
-- As a supervisor, I want to monitor quality metrics so that I can maintain standards
-- As an administrator, I want to generate reports so that I can analyze business performance
+- Como gerente, quero acompanhar cronogramas de produção para que eu possa garantir entrega pontual
+- Como funcionário, quero registrar horas de trabalho para que a folha de pagamento possa ser processada com precisão
+- Como supervisor, quero monitorar métricas de qualidade para que eu possa manter padrões
+- Como administrador, quero gerar relatórios para que eu possa analisar performance do negócio
 """
     }
     
@@ -297,30 +298,30 @@ I want to develop an enterprise resource planning (ERP) system for manufacturing
     with open(project_path / "input" / "requirements.md", "w") as f:
         f.write(example_content)
     
-    # Create README
+    # Cria README
     readme_content = f"""# {project_path.name}
 
-MARE CLI project for automated requirements engineering.
+Projeto MARE CLI para engenharia de requisitos automatizada.
 
-## Getting Started
+## Começando
 
-1. Configure your LLM API keys in `.env` (copy from `.env.template`)
-2. Edit `input/requirements.md` with your actual requirements
-3. Run the pipeline: `mare run`
-4. Check status: `mare status`
-5. Export results: `mare export markdown`
+1. Configure suas chaves de API LLM em `.env` (copie de `.env.template`)
+2. Edite `input/requirements.md` com seus requisitos reais
+3. Execute o pipeline: `mare run`
+4. Verifique status: `mare status`
+5. Exporte resultados: `mare export markdown`
 
-## Project Structure
+## Estrutura do Projeto
 
-- `input/` - Input requirements and user stories
-- `output/` - Generated specifications and reports
-- `.mare/` - MARE CLI configuration and workspace
-- `templates/` - Custom templates for output formatting
+- `input/` - Requisitos de entrada e user stories
+- `output/` - Especificações e relatórios gerados
+- `.mare/` - Configuração e workspace do MARE CLI
+- `templates/` - Templates personalizados para formatação de saída
 
 ## Template: {template}
-## LLM Provider: {llm_provider}
+## Provedor LLM: {llm_provider}
 
-For more information, visit: https://github.com/manus-ai/mare-cli
+Para mais informações, visite: https://github.com/manus-ai/mare-cli
 """
     
     with open(project_path / "README.md", "w") as f:

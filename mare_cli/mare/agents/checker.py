@@ -1,6 +1,6 @@
 """
-MARE CLI - Checker Agent Implementation
-Agent responsible for verifying quality, completeness and consistency of requirements
+MARE CLI - Implementação do Agente Checker
+Agente responsável por verificar qualidade, completude e consistência dos requisitos
 """
 
 from typing import Any, Dict, List
@@ -9,26 +9,26 @@ from mare.agents.base import AbstractAgent, AgentRole, ActionType, AgentConfig
 
 class CheckerAgent(AbstractAgent):
     """
-    Checker Agent implementation.
+    Implementação do Agente Checker.
     
-    This agent is responsible for:
-    - Checking requirements quality and consistency (CheckRequirement)
-    - Writing check reports with findings and recommendations (WriteCheckReport)
+    Este agente é responsável por:
+    - Verificar qualidade e consistência dos requisitos (CheckRequirement)
+    - Escrever relatórios de verificação com descobertas e recomendações (WriteCheckReport)
     """
     
     def __init__(self, config: AgentConfig):
-        """Initialize the Checker Agent."""
-        # Ensure the role is set correctly
+        """Inicializa o Agente Checker."""
+        # Garante que o papel está definido corretamente
         config.role = AgentRole.CHECKER
         
-        # Set default system prompt if not provided
+        # Define prompt do sistema padrão se não fornecido
         if not config.system_prompt:
             config.system_prompt = self.get_system_prompt()
         
         super().__init__(config)
     
     def can_perform_action(self, action_type: ActionType) -> bool:
-        """Check if this agent can perform the specified action."""
+        """Verifica se este agente pode executar a ação especificada."""
         allowed_actions = {
             ActionType.CHECK_REQUIREMENT,
             ActionType.WRITE_CHECK_REPORT
@@ -36,155 +36,155 @@ class CheckerAgent(AbstractAgent):
         return action_type in allowed_actions
     
     def get_system_prompt(self) -> str:
-        """Get the system prompt for the Checker Agent."""
-        return """You are an experienced requirements quality assurance specialist. Your role is to:
+        """Obtém o prompt do sistema para o Agente Checker."""
+        return """Você é um especialista experiente em garantia de qualidade de requisitos. Seu papel é:
 
-1. Analyze requirements for quality, completeness, consistency, and correctness
-2. Identify gaps, ambiguities, conflicts, and potential issues
-3. Provide detailed feedback and recommendations for improvement
-4. Ensure requirements meet industry standards and best practices
+1. Analisar requisitos quanto à qualidade, completude, consistência e correção
+2. Identificar lacunas, ambiguidades, conflitos e problemas potenciais
+3. Fornecer feedback detalhado e recomendações para melhoria
+4. Garantir que os requisitos atendam aos padrões da indústria e melhores práticas
 
-Quality Criteria to Evaluate:
+Critérios de Qualidade para Avaliar:
 
-COMPLETENESS:
-- Are all functional requirements covered?
-- Are non-functional requirements specified?
-- Are all user scenarios addressed?
-- Are edge cases and error conditions covered?
+COMPLETUDE:
+- Todos os requisitos funcionais estão cobertos?
+- Os requisitos não-funcionais estão especificados?
+- Todos os cenários de usuário estão abordados?
+- Casos extremos e condições de erro estão cobertos?
 
-CONSISTENCY:
-- Are requirements internally consistent?
-- Do requirements conflict with each other?
-- Is terminology used consistently?
-- Are assumptions and constraints aligned?
+CONSISTÊNCIA:
+- Os requisitos são internamente consistentes?
+- Os requisitos conflitam entre si?
+- A terminologia é usada consistentemente?
+- As suposições e restrições estão alinhadas?
 
-CLARITY:
-- Are requirements unambiguous?
-- Is language clear and precise?
-- Are acceptance criteria well-defined?
-- Can requirements be understood by all stakeholders?
+CLAREZA:
+- Os requisitos são não ambíguos?
+- A linguagem é clara e precisa?
+- Os critérios de aceitação estão bem definidos?
+- Os requisitos podem ser entendidos por todos os stakeholders?
 
-CORRECTNESS:
-- Do requirements accurately reflect user needs?
-- Are technical specifications feasible?
-- Are business rules correctly captured?
-- Are dependencies properly identified?
+CORREÇÃO:
+- Os requisitos refletem com precisão as necessidades dos usuários?
+- As especificações técnicas são viáveis?
+- As regras de negócio estão capturadas corretamente?
+- As dependências estão identificadas adequadamente?
 
-TESTABILITY:
-- Can requirements be verified/tested?
-- Are acceptance criteria measurable?
-- Are success criteria clearly defined?
+TESTABILIDADE:
+- Os requisitos podem ser verificados/testados?
+- Os critérios de aceitação são mensuráveis?
+- Os critérios de sucesso estão claramente definidos?
 
-TRACEABILITY:
-- Can requirements be traced to user stories?
-- Are relationships between requirements clear?
-- Is impact analysis possible?
+RASTREABILIDADE:
+- Os requisitos podem ser rastreados às user stories?
+- Os relacionamentos entre requisitos estão claros?
+- A análise de impacto é possível?
 
-Your analysis should be thorough, constructive, and actionable."""
+Sua análise deve ser completa, construtiva e acionável."""
     
     def _execute_specific_action(
         self, 
         action_type: ActionType, 
         input_data: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Execute a specific action implementation."""
+        """Executa uma implementação de ação específica."""
         
         if action_type == ActionType.CHECK_REQUIREMENT:
             return self._check_requirement(input_data)
         elif action_type == ActionType.WRITE_CHECK_REPORT:
             return self._write_check_report(input_data)
         else:
-            raise ValueError(f"Unsupported action type: {action_type}")
+            raise ValueError(f"Tipo de ação não suportado: {action_type}")
     
     def _check_requirement(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Check requirements for quality and consistency.
+        Verifica requisitos quanto à qualidade e consistência.
         
         Args:
-            input_data: Should contain 'requirements', 'entities', 'relationships'
+            input_data: Deve conter 'requirements', 'entities', 'relationships'
             
         Returns:
-            Dictionary containing check results
+            Dicionário contendo resultados da verificação
         """
         requirements = input_data.get('requirements', '')
         entities = input_data.get('entities', '')
         relationships = input_data.get('relationships', '')
         user_stories = input_data.get('user_stories', '')
-        domain = input_data.get('domain', 'general software system')
-        check_focus = input_data.get('check_focus', 'comprehensive')
+        domain = input_data.get('domain', 'sistema de software geral')
+        check_focus = input_data.get('check_focus', 'abrangente')
         
-        prompt_template = """Perform a comprehensive quality check on the following requirements artifacts. Analyze for completeness, consistency, clarity, correctness, and testability.
+        prompt_template = """Execute uma verificação abrangente de qualidade nos seguintes artefatos de requisitos. Analise quanto à completude, consistência, clareza, correção e testabilidade.
 
-Requirements: {requirements}
+Requisitos: {requirements}
 
-Entities: {entities}
+Entidades: {entities}
 
-Relationships: {relationships}
+Relacionamentos: {relationships}
 
-Original User Stories: {user_stories}
+User Stories Originais: {user_stories}
 
-Domain: {domain}
+Domínio: {domain}
 
-Check Focus: {check_focus}
+Foco da Verificação: {check_focus}
 
-Please provide a detailed analysis covering:
+Por favor forneça uma análise detalhada cobrindo:
 
-1. COMPLETENESS ANALYSIS
-   - Missing functional requirements
-   - Missing non-functional requirements
-   - Uncovered user scenarios
-   - Missing edge cases and error handling
-   - Score: [1-10] with justification
+1. ANÁLISE DE COMPLETUDE
+   - Requisitos funcionais ausentes
+   - Requisitos não-funcionais ausentes
+   - Cenários de usuário não cobertos
+   - Casos extremos e tratamento de erro ausentes
+   - Pontuação: [1-10] com justificativa
 
-2. CONSISTENCY ANALYSIS
-   - Internal conflicts between requirements
-   - Terminology inconsistencies
-   - Conflicting assumptions or constraints
-   - Misaligned entities and relationships
-   - Score: [1-10] with justification
+2. ANÁLISE DE CONSISTÊNCIA
+   - Conflitos internos entre requisitos
+   - Inconsistências de terminologia
+   - Suposições ou restrições conflitantes
+   - Entidades e relacionamentos desalinhados
+   - Pontuação: [1-10] com justificativa
 
-3. CLARITY ANALYSIS
-   - Ambiguous requirements
-   - Unclear acceptance criteria
-   - Vague or imprecise language
-   - Missing definitions
-   - Score: [1-10] with justification
+3. ANÁLISE DE CLAREZA
+   - Requisitos ambíguos
+   - Critérios de aceitação pouco claros
+   - Linguagem vaga ou imprecisa
+   - Definições ausentes
+   - Pontuação: [1-10] com justificativa
 
-4. CORRECTNESS ANALYSIS
-   - Requirements that don't match user stories
-   - Technically infeasible specifications
-   - Incorrect business rules
-   - Missing or wrong dependencies
-   - Score: [1-10] with justification
+4. ANÁLISE DE CORREÇÃO
+   - Requisitos que não correspondem às user stories
+   - Especificações tecnicamente inviáveis
+   - Regras de negócio incorretas
+   - Dependências ausentes ou erradas
+   - Pontuação: [1-10] com justificativa
 
-5. TESTABILITY ANALYSIS
-   - Requirements that cannot be tested
-   - Missing measurable criteria
-   - Unclear success conditions
-   - Verification challenges
-   - Score: [1-10] with justification
+5. ANÁLISE DE TESTABILIDADE
+   - Requisitos que não podem ser testados
+   - Critérios mensuráveis ausentes
+   - Condições de sucesso pouco claras
+   - Desafios de verificação
+   - Pontuação: [1-10] com justificativa
 
-6. TRACEABILITY ANALYSIS
-   - Requirements not traceable to user stories
-   - Missing requirement relationships
-   - Orphaned or duplicate requirements
-   - Impact analysis gaps
-   - Score: [1-10] with justification
+6. ANÁLISE DE RASTREABILIDADE
+   - Requisitos não rastreáveis às user stories
+   - Relacionamentos de requisitos ausentes
+   - Requisitos órfãos ou duplicados
+   - Lacunas na análise de impacto
+   - Pontuação: [1-10] com justificativa
 
-7. OVERALL ASSESSMENT
-   - Overall Quality Score: [1-10]
-   - Ready for Implementation: [Yes/No]
-   - Critical Issues Count: [number]
-   - Major Issues Count: [number]
-   - Minor Issues Count: [number]
+7. AVALIAÇÃO GERAL
+   - Pontuação Geral de Qualidade: [1-10]
+   - Pronto para Implementação: [Sim/Não]
+   - Contagem de Problemas Críticos: [número]
+   - Contagem de Problemas Maiores: [número]
+   - Contagem de Problemas Menores: [número]
 
-For each issue identified, provide:
-- Issue ID (e.g., COMP-001, CONS-001)
-- Severity: Critical/Major/Minor
-- Description: What the issue is
-- Impact: How it affects the project
-- Recommendation: How to fix it
-- Location: Where in the requirements it occurs"""
+Para cada problema identificado, forneça:
+- ID do Problema (ex: COMP-001, CONS-001)
+- Severidade: Crítico/Maior/Menor
+- Descrição: Qual é o problema
+- Impacto: Como afeta o projeto
+- Recomendação: Como corrigi-lo
+- Localização: Onde nos requisitos ocorre"""
         
         prompt = self._format_prompt(prompt_template, {
             'requirements': requirements,
@@ -220,100 +220,100 @@ For each issue identified, provide:
         domain = input_data.get('domain', 'general software system')
         report_type = input_data.get('report_type', 'comprehensive')
         
-        prompt_template = """Based on the quality check results, create a professional requirements quality assurance report. Format it as a comprehensive document suitable for stakeholders and development teams.
+        prompt_template = """Com base nos resultados da verificação de qualidade, crie um relatório profissional de garantia de qualidade de requisitos. Formate-o como um documento abrangente adequado para stakeholders e equipes de desenvolvimento.
 
-Check Results: {check_results}
+Resultados da Verificação: {check_results}
 
-Project Name: {project_name}
-Domain: {domain}
-Report Type: {report_type}
+Nome do Projeto: {project_name}
+Domínio: {domain}
+Tipo de Relatório: {report_type}
 
-Please create a structured report with the following sections:
+Por favor crie um relatório estruturado com as seguintes seções:
 
-# Requirements Quality Assurance Report
+# Relatório de Garantia de Qualidade de Requisitos
 
-## Executive Summary
-- Overall quality assessment
-- Key findings summary
-- Recommendations overview
-- Go/No-Go decision
+## Resumo Executivo
+- Avaliação geral de qualidade
+- Resumo dos principais achados
+- Visão geral das recomendações
+- Decisão Prosseguir/Não Prosseguir
 
-## Project Information
-- Project: {project_name}
-- Domain: {domain}
-- Review Date: [current date]
-- Review Type: {report_type}
+## Informações do Projeto
+- Projeto: {project_name}
+- Domínio: {domain}
+- Data da Revisão: [data atual]
+- Tipo de Revisão: {report_type}
 
-## Quality Metrics Summary
-- Completeness Score: [score/10]
-- Consistency Score: [score/10]
-- Clarity Score: [score/10]
-- Correctness Score: [score/10]
-- Testability Score: [score/10]
-- Traceability Score: [score/10]
-- **Overall Quality Score: [score/10]**
+## Resumo das Métricas de Qualidade
+- Pontuação de Completude: [pontuação/10]
+- Pontuação de Consistência: [pontuação/10]
+- Pontuação de Clareza: [pontuação/10]
+- Pontuação de Correção: [pontuação/10]
+- Pontuação de Testabilidade: [pontuação/10]
+- Pontuação de Rastreabilidade: [pontuação/10]
+- **Pontuação Geral de Qualidade: [pontuação/10]**
 
-## Issues Summary
-- Critical Issues: [count]
-- Major Issues: [count]
-- Minor Issues: [count]
-- Total Issues: [count]
+## Resumo de Problemas
+- Problemas Críticos: [contagem]
+- Problemas Maiores: [contagem]
+- Problemas Menores: [contagem]
+- Total de Problemas: [contagem]
 
-## Detailed Findings
+## Achados Detalhados
 
-### Critical Issues
-[List all critical issues with ID, description, impact, and recommendations]
+### Problemas Críticos
+[Liste todos os problemas críticos com ID, descrição, impacto e recomendações]
 
-### Major Issues
-[List all major issues with ID, description, impact, and recommendations]
+### Problemas Maiores
+[Liste todos os problemas maiores com ID, descrição, impacto e recomendações]
 
-### Minor Issues
-[List all minor issues with ID, description, impact, and recommendations]
+### Problemas Menores
+[Liste todos os problemas menores com ID, descrição, impacto e recomendações]
 
-## Quality Analysis by Dimension
+## Análise de Qualidade por Dimensão
 
-### Completeness Analysis
-[Detailed analysis of completeness]
+### Análise de Completude
+[Análise detalhada de completude]
 
-### Consistency Analysis
-[Detailed analysis of consistency]
+### Análise de Consistência
+[Análise detalhada de consistência]
 
-### Clarity Analysis
-[Detailed analysis of clarity]
+### Análise de Clareza
+[Análise detalhada de clareza]
 
-### Correctness Analysis
-[Detailed analysis of correctness]
+### Análise de Correção
+[Análise detalhada de correção]
 
-### Testability Analysis
-[Detailed analysis of testability]
+### Análise de Testabilidade
+[Análise detalhada de testabilidade]
 
-### Traceability Analysis
-[Detailed analysis of traceability]
+### Análise de Rastreabilidade
+[Análise detalhada de rastreabilidade]
 
-## Recommendations
+## Recomendações
 
-### Immediate Actions Required
-[Critical and major issues that must be addressed]
+### Ações Imediatas Necessárias
+[Problemas críticos e maiores que devem ser abordados]
 
-### Improvement Opportunities
-[Minor issues and enhancement suggestions]
+### Oportunidades de Melhoria
+[Problemas menores e sugestões de aprimoramento]
 
-### Process Improvements
-[Recommendations for improving the requirements process]
+### Melhorias de Processo
+[Recomendações para melhorar o processo de requisitos]
 
-## Conclusion
-- Overall assessment
-- Readiness for next phase
-- Risk assessment
-- Sign-off recommendation
+## Conclusão
+- Avaliação geral
+- Prontidão para próxima fase
+- Avaliação de risco
+- Recomendação de aprovação
 
-## Appendices
-- Detailed issue list
-- Quality criteria definitions
-- Review methodology
+## Apêndices
+- Lista detalhada de problemas
+- Definições de critérios de qualidade
+- Metodologia de revisão
 
 ---
-*This report was generated by the MARE Requirements Quality Checker*"""
+*Este relatório foi gerado pelo Verificador de Qualidade de Requisitos MARE*"""
         
         prompt = self._format_prompt(prompt_template, {
             'check_results': check_results,

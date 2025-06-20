@@ -118,8 +118,8 @@ class TestStakeholderAgent(unittest.TestCase):
     
     def test_can_perform_action(self):
         """Test action capability checking."""
-        self.assertTrue(self.agent.can_perform_action(ActionType.EXPRESS_REQUIREMENT))
-        self.assertTrue(self.agent.can_perform_action(ActionType.RESPOND_TO_QUESTION))
+        self.assertTrue(self.agent.can_perform_action(ActionType.SPEAK_USER_STORIES))
+        self.assertTrue(self.agent.can_perform_action(ActionType.ANSWER_QUESTION))
         self.assertFalse(self.agent.can_perform_action(ActionType.EXTRACT_ENTITY))
     
     def test_express_initial_requirements(self):
@@ -167,8 +167,8 @@ class TestCollectorAgent(unittest.TestCase):
     
     def test_can_perform_action(self):
         """Test action capability checking."""
-        self.assertTrue(self.agent.can_perform_action(ActionType.ANALYZE_AND_QUESTION))
-        self.assertTrue(self.agent.can_perform_action(ActionType.DRAFT_REQUIREMENT))
+        self.assertTrue(self.agent.can_perform_action(ActionType.PROPOSE_QUESTION))
+        self.assertTrue(self.agent.can_perform_action(ActionType.WRITE_REQ_DRAFT))
         self.assertFalse(self.agent.can_perform_action(ActionType.CHECK_REQUIREMENT))
     
     def test_analyze_and_question(self):
@@ -218,7 +218,7 @@ class TestModelerAgent(unittest.TestCase):
     def test_can_perform_action(self):
         """Test action capability checking."""
         self.assertTrue(self.agent.can_perform_action(ActionType.EXTRACT_ENTITY))
-        self.assertTrue(self.agent.can_perform_action(ActionType.EXTRACT_RELATIONSHIP))
+        self.assertTrue(self.agent.can_perform_action(ActionType.EXTRACT_RELATION))
         self.assertFalse(self.agent.can_perform_action(ActionType.WRITE_SRS))
     
     def test_extract_system_entities(self):
@@ -270,7 +270,7 @@ class TestCheckerAgent(unittest.TestCase):
         """Test action capability checking."""
         self.assertTrue(self.agent.can_perform_action(ActionType.CHECK_REQUIREMENT))
         self.assertTrue(self.agent.can_perform_action(ActionType.WRITE_CHECK_REPORT))
-        self.assertFalse(self.agent.can_perform_action(ActionType.EXPRESS_REQUIREMENT))
+        self.assertFalse(self.agent.can_perform_action(ActionType.SPEAK_USER_STORIES))
     
     def test_perform_quality_check(self):
         """Test performing quality check."""

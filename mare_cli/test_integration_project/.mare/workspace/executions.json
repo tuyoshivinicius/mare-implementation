@@ -1,0 +1,12 @@
+[
+  {
+    "execution_id": "2680f95c-930a-4137-a4a0-5cf8d59fcb99",
+    "timestamp": "2025-06-20T04:48:58.254578",
+    "status": "completed",
+    "project_name": "test_integration_project",
+    "domain": "general software system",
+    "quality_score": 8.5,
+    "iterations": 1,
+    "error_message": null
+  }
+]

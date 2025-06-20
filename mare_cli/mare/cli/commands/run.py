@@ -1,6 +1,6 @@
 """
-MARE CLI - Run command implementation
-Handles pipeline execution and orchestration
+MARE CLI - Implementação do comando run
+Gerencia execução e orquestração do pipeline com transparência aprimorada
 """
 
 from pathlib import Path
@@ -8,13 +8,13 @@ from typing import Optional
 import click
 from rich.console import Console
 from rich.panel import Panel
-from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn
 from rich.table import Table
 
 from mare.pipeline import PipelineExecutor
 from mare.utils.exceptions import PipelineExecutionError
 from mare.utils.helpers import find_project_root, validate_project_structure
 from mare.utils.logging import get_logger
+from mare.utils.progress import start_progress_tracking, stop_progress_tracking, get_progress_tracker
 
 console = Console()
 logger = get_logger(__name__)
@@ -25,172 +25,183 @@ def run_command(
     interactive: bool,
     input_file: Optional[str],
     max_iterations: int,
-    timeout: int = 300
+    timeout: int = 300,
+    verbose: bool = False
 ) -> None:
     """
-    Execute the MARE pipeline.
+    Executa o pipeline MARE com transparência aprimorada.
     
     Args:
-        ctx: Click context object
-        phase: Specific phase to run
-        interactive: Run in interactive mode
-        input_file: Input file with requirements
-        max_iterations: Maximum number of iterations
+        ctx: Objeto de contexto do Click
+        phase: Fase específica para executar
+        interactive: Executa em modo interativo
+        input_file: Arquivo de entrada com requisitos
+        max_iterations: Número máximo de iterações
+        timeout: Timeout de execução em segundos
+        verbose: Habilita logging detalhado
     """
-    logger.info("Starting pipeline execution")
+    logger.info("Iniciando execução do pipeline")
     
-    # Find project root
+    # Encontra raiz do projeto
     project_root = find_project_root()
     if not project_root:
         raise PipelineExecutionError(
-            "No MARE project found. Run 'mare init' to create a new project."
+            "Nenhum projeto MARE encontrado. Execute 'mare init' para criar um novo projeto."
         )
     
-    # Validate project structure
+    # Valida estrutura do projeto
     if not validate_project_structure(project_root):
         raise PipelineExecutionError(
-            "Invalid project structure. Please check your project configuration."
+            "Estrutura de projeto inválida. Verifique a configuração do seu projeto."
         )
     
+    # Inicia rastreamento de progresso aprimorado
+    tracker = start_progress_tracking()
+    
     try:
-        # Initialize pipeline executor
+        # Inicializa executor do pipeline
         console.print(Panel(
-            f"[blue]Initializing MARE Pipeline[/blue]\n\n"
-            f"[bold]Project:[/bold] {project_root.name}\n"
-            f"[bold]Phase:[/bold] {phase or 'all'}\n"
-            f"[bold]Interactive:[/bold] {interactive}\n"
-            f"[bold]Input file:[/bold] {input_file or 'default'}\n"
-            f"[bold]Max iterations:[/bold] {max_iterations}",
-            title="[bold blue]MARE Pipeline Execution[/bold blue]",
+            f"[blue]Inicializando Pipeline MARE[/blue]\n\n"
+            f"[bold]Projeto:[/bold] {project_root.name}\n"
+            f"[bold]Fase:[/bold] {phase or 'todas'}\n"
+            f"[bold]Interativo:[/bold] {interactive}\n"
+            f"[bold]Arquivo de entrada:[/bold] {input_file or 'padrão'}\n"
+            f"[bold]Máx iterações:[/bold] {max_iterations}\n"
+            f"[bold]Timeout:[/bold] {timeout}s\n"
+            f"[bold]Detalhado:[/bold] {verbose}",
+            title="[bold blue]Execução do Pipeline MARE[/bold blue]",
             border_style="blue"
         ))
         
-        executor = PipelineExecutor(project_root)
+        # Inicia fase de inicialização
+        tracker.start_phase("initialization", "Criando executor do pipeline")
         
-        # Prepare input file path
+        executor = PipelineExecutor(project_root)
+        tracker.update_phase_progress("initialization", 50, "Validando configuração")
+        
+        # Prepara caminho do arquivo de entrada
         input_path = None
         if input_file:
             input_path = Path(input_file)
             if not input_path.is_absolute():
                 input_path = project_root / input_path
         
-        # Execute pipeline with progress tracking
-        with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            BarColumn(),
-            TaskProgressColumn(),
-            console=console
-        ) as progress:
-            
-            # Create progress tasks for each phase
-            task_init = progress.add_task("Initializing agents...", total=100)
-            progress.update(task_init, advance=20)
-            
-            task_exec = progress.add_task("Executing pipeline...", total=100)
-            
-            # Execute the pipeline
-            result = executor.execute_pipeline(
-                input_file=input_path,
-                interactive=interactive,
-                max_iterations=max_iterations,
-                timeout=timeout
-            )
-            
-            progress.update(task_init, completed=100)
-            progress.update(task_exec, completed=100)
+        tracker.update_phase_progress("initialization", 100, "Pronto para executar")
+        tracker.complete_phase("initialization")
         
-        # Display results
+        # Executa o pipeline com rastreamento aprimorado
+        result = executor.execute_pipeline(
+            input_file=input_path,
+            interactive=interactive,
+            max_iterations=max_iterations,
+            timeout=timeout,
+            progress_tracker=tracker,
+            verbose=verbose
+        )
+        
+        # Exibe resultados
         _display_execution_results(result)
         
-        logger.info("Pipeline execution completed successfully")
+        logger.info("Execução do pipeline concluída com sucesso")
         
     except Exception as e:
-        logger.error(f"Pipeline execution failed: {e}")
+        logger.error(f"Execução do pipeline falhou: {e}")
+        
+        # Marca fase atual como falhada
+        if tracker.current_phase:
+            tracker.fail_phase(tracker.current_phase, str(e))
+        
         console.print(Panel(
-            f"[red]Pipeline execution failed:[/red]\n\n"
-            f"[bold]Error:[/bold] {str(e)}\n\n"
-            f"[dim]Check the logs for more details.[/dim]",
-            title="[bold red]Execution Failed[/bold red]",
+            f"[red]Execução do pipeline falhou:[/red]\n\n"
+            f"[bold]Erro:[/bold] {str(e)}\n\n"
+            f"[dim]Verifique os logs para mais detalhes.[/dim]",
+            title="[bold red]Execução Falhou[/bold red]",
             border_style="red"
         ))
-        raise PipelineExecutionError(f"Pipeline execution failed: {e}")
+        raise PipelineExecutionError(f"Execução do pipeline falhou: {e}")
+    
+    finally:
+        # Para rastreamento de progresso
+        stop_progress_tracking()
+        
+    # Return result for testing
+    return result if 'result' in locals() else {"status": "completed"}
 
 def _display_execution_results(result: dict) -> None:
-    """Display pipeline execution results."""
+    """Exibe resultados da execução do pipeline."""
     
-    # Status panel
+    # Painel de status
     status_color = "green" if result["status"] == "completed" else "red"
     console.print(Panel(
-        f"[{status_color}]Pipeline Status: {result['status'].upper()}[/{status_color}]\n\n"
-        f"[bold]Execution ID:[/bold] {result['execution_id'][:8]}...\n"
-        f"[bold]Quality Score:[/bold] {result['quality_score']:.1f}/10\n"
-        f"[bold]Iterations:[/bold] {result['iterations']}\n"
-        f"[bold]Issues Found:[/bold] {len(result['issues_found'])}",
-        title="[bold]Execution Summary[/bold]",
+        f"[{status_color}]Status do Pipeline: {result['status'].upper()}[/{status_color}]\n\n"
+        f"[bold]ID da Execução:[/bold] {result['execution_id'][:8]}...\n"
+        f"[bold]Pontuação de Qualidade:[/bold] {result['quality_score']:.1f}/10\n"
+        f"[bold]Iterações:[/bold] {result['iterations']}\n"
+        f"[bold]Problemas Encontrados:[/bold] {len(result.get('issues_found', []))}",
+        title="[bold]Resumo da Execução[/bold]",
         border_style=status_color
     ))
     
-    # Artifacts summary
-    artifacts = result["artifacts"]
-    artifacts_table = Table(title="Generated Artifacts")
-    artifacts_table.add_column("Artifact", style="cyan", no_wrap=True)
+    # Resumo de artefatos
+    artifacts = result.get("artifacts", {})
+    artifacts_table = Table(title="Artefatos Gerados")
+    artifacts_table.add_column("Artefato", style="cyan", no_wrap=True)
     artifacts_table.add_column("Status", style="magenta")
-    artifacts_table.add_column("Size", style="green")
+    artifacts_table.add_column("Tamanho", style="green")
     
     artifact_info = [
-        ("User Stories", artifacts["user_stories"]),
-        ("Requirements Draft", artifacts["requirements"]),
-        ("System Entities", artifacts["entities"]),
-        ("Entity Relationships", artifacts["relationships"]),
-        ("Quality Check Results", artifacts["check_results"]),
-        ("Final SRS Document", artifacts["final_srs"])
+        ("User Stories", artifacts.get("user_stories", "")),
+        ("Rascunho de Requisitos", artifacts.get("requirements", "")),
+        ("Entidades do Sistema", artifacts.get("entities", "")),
+        ("Relacionamentos de Entidades", artifacts.get("relationships", "")),
+        ("Resultados de Verificação de Qualidade", artifacts.get("check_results", "")),
+        ("Documento SRS Final", artifacts.get("final_srs", ""))
     ]
     
     for name, content in artifact_info:
         if content:
-            status = "[green]✓ Generated[/green]"
+            status = "[green]✓ Gerado[/green]"
             size = f"{len(content)} chars"
         else:
-            status = "[red]✗ Missing[/red]"
+            status = "[red]✗ Ausente[/red]"
             size = "0 chars"
         
         artifacts_table.add_row(name, status, size)
     
     console.print(artifacts_table)
     
-    # Issues summary if any
-    if result["issues_found"]:
+    # Resumo de problemas se houver
+    if result.get("issues_found"):
         console.print(Panel(
-            f"[yellow]Quality issues were found during verification.[/yellow]\n\n"
-            f"Run 'mare status --quality' for detailed analysis.",
-            title="[bold yellow]Quality Issues[/bold yellow]",
+            f"[yellow]Problemas de qualidade foram encontrados durante a verificação.[/yellow]\n\n"
+            f"Execute 'mare status --quality' para análise detalhada.",
+            title="[bold yellow]Problemas de Qualidade[/bold yellow]",
             border_style="yellow"
         ))
     
-    # Success message
+    # Mensagem de sucesso
     if result["status"] == "completed":
         console.print(Panel(
-            f"[green]✓ Pipeline execution completed successfully![/green]\n\n"
-            f"[bold]Next steps:[/bold]\n"
-            f"1. Review generated artifacts: 'mare status --artifacts'\n"
-            f"2. Export final specification: 'mare export markdown'\n"
-            f"3. Check quality metrics: 'mare status --quality'\n\n"
-            f"[dim]Final SRS saved to: output/requirements_specification.md[/dim]",
-            title="[bold green]Execution Complete[/bold green]",
+            f"[green]✓ Execução do pipeline concluída com sucesso![/green]\n\n"
+            f"[bold]Próximos passos:[/bold]\n"
+            f"1. Revisar artefatos gerados: 'mare status --artifacts'\n"
+            f"2. Exportar especificação final: 'mare export markdown'\n"
+            f"3. Verificar métricas de qualidade: 'mare status --quality'\n\n"
+            f"[dim]SRS final salvo em: output/requirements_specification.md[/dim]",
+            title="[bold green]Execução Concluída[/bold green]",
             border_style="green"
         ))
     else:
-        error_msg = result.get("error_message", "Unknown error")
+        error_msg = result.get("error_message", "Erro desconhecido")
         console.print(Panel(
-            f"[red]Pipeline execution failed.[/red]\n\n"
-            f"[bold]Error:[/bold] {error_msg}\n\n"
-            f"[bold]Troubleshooting:[/bold]\n"
-            f"1. Check your API keys in .env file\n"
-            f"2. Verify input requirements in input/requirements.md\n"
-            f"3. Review logs for detailed error information\n"
-            f"4. Try running with --interactive flag for step-by-step execution",
-            title="[bold red]Execution Failed[/bold red]",
+            f"[red]Execução do pipeline falhou.[/red]\n\n"
+            f"[bold]Erro:[/bold] {error_msg}\n\n"
+            f"[bold]Solução de problemas:[/bold]\n"
+            f"1. Verifique suas chaves de API no arquivo .env\n"
+            f"2. Verifique requisitos de entrada em input/requirements.md\n"
+            f"3. Revise logs para informações detalhadas do erro\n"
+            f"4. Tente executar com flag --interactive para execução passo a passo",
+            title="[bold red]Execução Falhou[/bold red]",
             border_style="red"
         ))
 

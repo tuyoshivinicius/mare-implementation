@@ -1,0 +1,45 @@
+agents:
+  checker:
+    enabled: true
+    model: gpt-4
+  collector:
+    enabled: true
+    model: gpt-3.5-turbo
+  documenter:
+    enabled: true
+    model: gpt-3.5-turbo
+  modeler:
+    enabled: true
+    model: gpt-4
+  stakeholder:
+    enabled: true
+    model: gpt-3.5-turbo
+llm:
+  models:
+    checker: gpt-4
+    collector: gpt-3.5-turbo
+    default: gpt-3.5-turbo
+    documenter: gpt-3.5-turbo
+    modeler: gpt-4
+    stakeholder: gpt-3.5-turbo
+  parameters:
+    frequency_penalty: 0.0
+    max_tokens: 2048
+    presence_penalty: 0.0
+    temperature: 0.7
+    top_p: 1.0
+  provider: openai
+pipeline:
+  auto_advance: true
+  max_iterations: 5
+  quality_threshold: 0.8
+project:
+  created_at: '2025-06-20T05:00:00'
+  id: ae9d5f48-fcc1-4178-b9ac-257d8a5dcae7
+  name: test_integration_project
+  template: basic
+  version: 1.0.0
+workspace:
+  backup: true
+  storage_type: sqlite
+  versioning: true
