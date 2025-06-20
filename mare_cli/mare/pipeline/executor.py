@@ -107,6 +107,8 @@ class PipelineExecutor(MARELoggerMixin):
             quality_score = recent_execution.get('quality_score', 0)
             if quality_score >= self.pipeline_config.quality_threshold:
                 self.log_info(f"Found recent successful execution with quality {quality_score}")
+                # Load artifacts from workspace for recent execution
+                recent_execution = self._load_artifacts_for_execution(recent_execution)
                 return recent_execution
         
         try:
@@ -201,6 +203,44 @@ class PipelineExecutor(MARELoggerMixin):
         # more complex state management and partial execution capabilities
         raise NotImplementedError("Phase-specific execution not yet implemented")
     
+    def _load_artifacts_for_execution(self, execution_record: Dict[str, Any]) -> Dict[str, Any]:
+        """Load artifacts from workspace for a given execution."""
+        try:
+            execution_id = execution_record["execution_id"]
+            artifacts_dir = self.workspace_path / "artifacts" / execution_id
+            
+            # Load artifacts if they exist
+            artifacts = {}
+            artifact_files = {
+                "user_stories": "user_stories.md",
+                "requirements": "requirements.md", 
+                "entities": "entities.md",
+                "relationships": "relationships.md",
+                "check_results": "check_results.md",
+                "final_srs": "final_srs.md"
+            }
+            
+            for key, filename in artifact_files.items():
+                file_path = artifacts_dir / filename
+                if file_path.exists():
+                    artifacts[key] = file_path.read_text(encoding='utf-8')
+                else:
+                    artifacts[key] = ""
+            
+            # Add artifacts to execution record
+            execution_record["artifacts"] = artifacts
+            execution_record["issues_found"] = []  # Default empty list
+            
+            self.log_info(f"Loaded artifacts for execution {execution_id[:8]}...")
+            return execution_record
+            
+        except Exception as e:
+            self.log_error(f"Failed to load artifacts for execution: {e}")
+            # Return original record if loading fails
+            execution_record["artifacts"] = {}
+            execution_record["issues_found"] = []
+            return execution_record
+
     def _check_recent_execution(self) -> Optional[Dict[str, Any]]:
         """Check for recent successful execution within the last hour."""
         try:
