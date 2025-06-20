@@ -1,9 +1,9 @@
 # Example Requirements Input
 
 ## System Overview
-I want to develop a simple task management system.
+Quero desenvolver um sistema simples de gerenciamento de tarefas.
 
 ## User Stories
-- As a user, I want to create tasks so that I can track my work
-- As a user, I want to mark tasks as complete so that I can see my progress
-- As a user, I want to delete tasks so that I can remove unnecessary items
+- Como usuário, quero criar tarefas para poder acompanhar meu trabalho.
+- Como usuário, quero marcar tarefas como concluídas para poder ver meu progresso.
+- Como usuário, quero excluir tarefas para poder remover itens desnecessários.
