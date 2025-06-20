@@ -35,7 +35,7 @@ pipeline:
   quality_threshold: 0.8
 project:
   created_at: '2025-06-20T05:00:00'
-  id: ae9d5f48-fcc1-4178-b9ac-257d8a5dcae7
+  id: d9c72e9d-7d0c-4938-84ad-a9300ef5f22d
   name: test_integration_project
   template: basic
   version: 1.0.0
