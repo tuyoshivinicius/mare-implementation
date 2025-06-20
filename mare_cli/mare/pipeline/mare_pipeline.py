@@ -171,8 +171,17 @@ class MAREPipeline(MARELoggerMixin):
             # Specification -> END
             workflow.add_edge("specification", END)
             
-            # Compile the graph
-            self.graph = workflow.compile()
+            # Compile the graph with recursion limit
+            self.graph = workflow.compile(
+                checkpointer=None,
+                interrupt_before=None,
+                interrupt_after=None,
+                debug=False
+            )
+            
+            # Set recursion limit for the graph
+            if hasattr(self.graph, 'config'):
+                self.graph.config = {"recursion_limit": self.config.max_iterations + 5}
             
             self.log_info("Pipeline graph built successfully")
             
@@ -388,16 +397,30 @@ class MAREPipeline(MARELoggerMixin):
     
     def _should_continue_iterations(self, state: PipelineState) -> str:
         """Determine if iterations should continue."""
+        # Increment iteration count first
+        current_iteration = state["iteration_count"] + 1
+        
+        self.log_info(f"Checking iteration control - Current: {current_iteration}, Max: {self.config.max_iterations}")
+        self.log_info(f"Quality score: {state['quality_score']}, Threshold: {self.config.quality_threshold}")
+        
+        # If max iterations reached, proceed to specification
+        if current_iteration >= self.config.max_iterations:
+            self.log_info("Max iterations reached, proceeding to specification")
+            return "specification"
+        
         # If quality is good enough, proceed to specification
         if state["quality_score"] >= self.config.quality_threshold:
+            self.log_info("Quality threshold met, proceeding to specification")
             return "specification"
         
-        # If max iterations reached, proceed to specification anyway
-        if state["iteration_count"] >= self.config.max_iterations:
-            return "specification"
+        # If we have some results but quality is not good enough, continue iterating
+        if state.get("requirements_draft") and current_iteration < self.config.max_iterations:
+            self.log_info("Quality below threshold, continuing iterations")
+            return "continue"
         
-        # Otherwise, continue iterating
-        return "continue"
+        # Fallback: proceed to specification to avoid infinite loop
+        self.log_info("Fallback: proceeding to specification to avoid infinite loop")
+        return "specification"
     
     def _extract_questions_list(self, questions_text: str) -> List[str]:
         """Extract individual questions from the questions text."""
@@ -426,28 +449,45 @@ class MAREPipeline(MARELoggerMixin):
     
     def _parse_check_results(self, check_results: str) -> tuple[float, List[Dict[str, Any]]]:
         """Parse check results to extract quality score and issues."""
-        # Simple parsing - look for overall score and issues
-        quality_score = 7.0  # Default score
+        # Default values
+        quality_score = 7.0  # Default score if parsing fails
         issues = []
+        
+        if not check_results or not isinstance(check_results, str):
+            self.log_warning("Empty or invalid check results, using default quality score")
+            return quality_score, issues
         
         # Try to extract overall quality score
         lines = check_results.split('\n')
         for line in lines:
-            if 'Overall Quality Score:' in line:
+            line = line.strip()
+            if 'Overall Quality Score:' in line or 'Quality Score:' in line:
                 try:
-                    score_text = line.split(':')[1].strip()
-                    if '/' in score_text:
-                        score_text = score_text.split('/')[0]
-                    quality_score = float(score_text)
-                except:
-                    pass
+                    # Extract score from patterns like "Score: 8.5/10" or "Score: 8.5"
+                    score_part = line.split(':')[1].strip()
+                    if '/' in score_part:
+                        score_part = score_part.split('/')[0].strip()
+                    # Remove any non-numeric characters except decimal point
+                    score_text = ''.join(c for c in score_part if c.isdigit() or c == '.')
+                    if score_text:
+                        quality_score = float(score_text)
+                        # Ensure score is in valid range
+                        quality_score = max(0.0, min(10.0, quality_score))
+                        self.log_info(f"Extracted quality score: {quality_score}")
+                        break
+                except (ValueError, IndexError) as e:
+                    self.log_warning(f"Failed to parse quality score from line '{line}': {e}")
+                    continue
         
         # Extract issues (simplified)
-        if 'Critical Issues Count:' in check_results:
+        if 'Critical' in check_results.lower():
             issues.append({"severity": "critical", "count": 1})
-        if 'Major Issues Count:' in check_results:
-            issues.append({"severity": "major", "count": 2})
+        if 'Major' in check_results.lower():
+            issues.append({"severity": "major", "count": 1})
+        if 'Minor' in check_results.lower():
+            issues.append({"severity": "minor", "count": 1})
         
+        self.log_info(f"Parsed quality score: {quality_score}, issues: {len(issues)}")
         return quality_score, issues
     
     def execute(
@@ -502,8 +542,9 @@ class MAREPipeline(MARELoggerMixin):
         }
         
         try:
-            # Execute the pipeline
-            final_state = self.graph.invoke(initial_state)
+            # Execute the pipeline with recursion limit configuration
+            config = {"recursion_limit": self.config.max_iterations + 5}
+            final_state = self.graph.invoke(initial_state, config=config)
             
             self.log_info(f"Pipeline execution completed with status: {final_state['status']}")
             return final_state
