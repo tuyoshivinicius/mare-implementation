@@ -80,7 +80,9 @@ class PipelineExecutor(MARELoggerMixin):
         input_file: Optional[str] = None,
         interactive: bool = False,
         max_iterations: Optional[int] = None,
-        timeout: Optional[int] = 300  # 5 minutes default timeout
+        timeout: Optional[int] = 300,  # 5 minutes default timeout
+        progress_tracker = None,
+        verbose: bool = False
     ) -> Dict[str, Any]:
         """
         Execute the complete MARE pipeline.
@@ -130,6 +132,10 @@ class PipelineExecutor(MARELoggerMixin):
             
             # Execute pipeline with progress monitoring
             self.log_info(f"Executing pipeline for: {project_name}")
+            
+            if progress_tracker:
+                progress_tracker.start_phase("elicitation", "Starting requirements elicitation")
+            
             final_state = self.pipeline.execute(
                 system_idea, 
                 domain, 
@@ -147,7 +153,7 @@ class PipelineExecutor(MARELoggerMixin):
             # Save results
             self._save_execution_results(final_state)
             
-            # Prepare return datata
+            # Prepare return data
             result = {
                 "status": final_state["status"].value,
                 "execution_id": final_state["execution_id"],
@@ -163,7 +169,7 @@ class PipelineExecutor(MARELoggerMixin):
                     "check_results": final_state["check_results"],
                     "final_srs": final_state["final_srs"]
                 },
-                "issues_found": final_state["issues_found"],
+                "issues_found": final_state.get("issues_found", []),
                 "error_message": final_state.get("error_message")
             }
             

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-MARE CLI - Multi-Agent Collaboration Framework for Requirements Engineering
-Main CLI entry point and command dispatcher
+MARE CLI - Framework de Colaboração Multi-Agente para Engenharia de Requisitos
+Ponto de entrada principal da CLI e despachador de comandos
 """
 
 import sys
@@ -19,10 +19,10 @@ from mare.cli.commands.export import export_command
 from mare.utils.logging import setup_logging
 from mare.utils.exceptions import MAREException
 
-# Initialize rich console for beautiful output
+# Inicializa console rich para saída bonita
 console = Console()
 
-# ASCII Art for MARE CLI
+# Arte ASCII para MARE CLI
 MARE_LOGO = """
 ███╗   ███╗ █████╗ ██████╗ ███████╗
 ████╗ ████║██╔══██╗██╔══██╗██╔════╝
@@ -30,7 +30,7 @@ MARE_LOGO = """
 ██║╚██╔╝██║██╔══██║██╔══██╗██╔══╝  
 ██║ ╚═╝ ██║██║  ██║██║  ██║███████╗
 ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝
-Multi-Agent Requirements Engineering
+Engenharia de Requisitos Multi-Agente
 """
 
 @click.group()
@@ -38,47 +38,47 @@ Multi-Agent Requirements Engineering
 @click.option(
     "--verbose", "-v", 
     is_flag=True, 
-    help="Enable verbose output"
+    help="Habilita saída detalhada"
 )
 @click.option(
     "--debug", 
     is_flag=True, 
-    help="Enable debug mode"
+    help="Habilita modo de depuração"
 )
 @click.option(
     "--config", "-c",
     type=click.Path(exists=True),
-    help="Path to configuration file"
+    help="Caminho para arquivo de configuração"
 )
 @click.pass_context
 def cli(ctx, verbose, debug, config):
     """
-    MARE CLI - Multi-Agent Collaboration Framework for Requirements Engineering
+    MARE CLI - Framework de Colaboração Multi-Agente para Engenharia de Requisitos
     
-    A powerful CLI tool that implements the MARE framework for automated
-    requirements engineering using collaborative AI agents.
+    Uma ferramenta CLI poderosa que implementa o framework MARE para engenharia
+    de requisitos automatizada usando agentes de IA colaborativos.
     
-    Based on the paper: "MARE: Multi-Agents Collaboration Framework for 
+    Baseado no artigo: "MARE: Multi-Agents Collaboration Framework for 
     Requirements Engineering" (https://arxiv.org/abs/2405.03256)
     """
-    # Ensure context object exists
+    # Garante que o objeto de contexto existe
     ctx.ensure_object(dict)
     
-    # Store global options in context
+    # Armazena opções globais no contexto
     ctx.obj['verbose'] = verbose
     ctx.obj['debug'] = debug
     ctx.obj['config'] = config
     
-    # Setup logging
+    # Configura logging
     log_level = logging.DEBUG if debug else (logging.INFO if verbose else logging.WARNING)
     setup_logging(log_level)
     
-    # Display logo in debug mode
+    # Exibe logo no modo debug
     if debug:
         console.print(Panel(
             Text(MARE_LOGO, style="bold blue"),
             title="[bold green]MARE CLI v1.0.0[/bold green]",
-            subtitle="[italic]Multi-Agent Requirements Engineering[/italic]"
+            subtitle="[italic]Engenharia de Requisitos Multi-Agente[/italic]"
         ))
 
 @cli.command()
@@ -87,37 +87,37 @@ def cli(ctx, verbose, debug, config):
     '--template', '-t',
     type=click.Choice(['basic', 'web_app', 'mobile_app', 'enterprise']),
     default='basic',
-    help='Project template to use'
+    help='Template de projeto a ser usado'
 )
 @click.option(
     '--llm-provider',
     type=click.Choice(['openai', 'anthropic', 'local']),
     default='openai',
-    help='LLM provider to configure'
+    help='Provedor de LLM a ser configurado'
 )
 @click.option(
     '--force', '-f',
     is_flag=True,
-    help='Force initialization even if directory exists'
+    help='Força inicialização mesmo se o diretório existir'
 )
 @click.pass_context
 def init(ctx, project_name, template, llm_provider, force):
     """
-    Initialize a new MARE project with the specified configuration.
+    Inicializa um novo projeto MARE com a configuração especificada.
     
-    Creates project structure, configuration files, and workspace setup.
+    Cria estrutura do projeto, arquivos de configuração e configuração do workspace.
     
-    Examples:
-        mare init my_project
-        mare init my_project --template web_app --llm-provider openai
+    Exemplos:
+        mare init meu_projeto
+        mare init meu_projeto --template web_app --llm-provider openai
     """
     try:
         init_command(ctx, project_name, template, llm_provider, force)
     except MAREException as e:
-        console.print(f"[red]Error:[/red] {e}")
+        console.print(f"[red]Erro:[/red] {e}")
         sys.exit(1)
     except Exception as e:
-        console.print(f"[red]Unexpected error:[/red] {e}")
+        console.print(f"[red]Erro inesperado:[/red] {e}")
         if ctx.obj.get('debug'):
             raise
         sys.exit(1)
@@ -126,44 +126,44 @@ def init(ctx, project_name, template, llm_provider, force):
 @click.option(
     '--phase', '-p',
     type=click.Choice(['elicitation', 'modeling', 'verification', 'specification']),
-    help='Run specific phase only'
+    help='Executa apenas uma fase específica'
 )
 @click.option(
     '--interactive', '-i',
     is_flag=True,
-    help='Run in interactive mode with step-by-step execution'
+    help='Executa em modo interativo com execução passo a passo'
 )
 @click.option(
     '--input-file', '-f',
     type=click.Path(exists=True),
-    help='Input file with initial requirements'
+    help='Arquivo de entrada com requisitos iniciais'
 )
 @click.option(
     '--max-iterations',
     type=int,
     default=5,
-    help='Maximum number of refinement iterations'
+    help='Número máximo de iterações de refinamento'
 )
 @click.pass_context
 def run(ctx, phase, interactive, input_file, max_iterations):
     """
-    Execute the MARE pipeline to process requirements.
+    Executa o pipeline MARE para processar requisitos.
     
-    Runs the complete multi-agent collaboration process or specific phases
-    to transform initial requirements into structured specifications.
+    Executa o processo completo de colaboração multi-agente ou fases específicas
+    para transformar requisitos iniciais em especificações estruturadas.
     
-    Examples:
+    Exemplos:
         mare run
         mare run --phase elicitation --interactive
-        mare run --input-file requirements.txt --max-iterations 3
+        mare run --input-file requisitos.txt --max-iterations 3
     """
     try:
         run_command(ctx, phase, interactive, input_file, max_iterations)
     except MAREException as e:
-        console.print(f"[red]Error:[/red] {e}")
+        console.print(f"[red]Erro:[/red] {e}")
         sys.exit(1)
     except Exception as e:
-        console.print(f"[red]Unexpected error:[/red] {e}")
+        console.print(f"[red]Erro inesperado:[/red] {e}")
         if ctx.obj.get('debug'):
             raise
         sys.exit(1)
@@ -172,26 +172,26 @@ def run(ctx, phase, interactive, input_file, max_iterations):
 @click.option(
     '--detailed', '-d',
     is_flag=True,
-    help='Show detailed status information'
+    help='Mostra informações detalhadas de status'
 )
 @click.option(
     '--artifacts', '-a',
     is_flag=True,
-    help='List all artifacts in workspace'
+    help='Lista todos os artefatos no workspace'
 )
 @click.option(
     '--quality', '-q',
     is_flag=True,
-    help='Show quality metrics and analysis'
+    help='Mostra métricas de qualidade e análise'
 )
 @click.pass_context
 def status(ctx, detailed, artifacts, quality):
     """
-    Display current project status and progress information.
+    Exibe status atual do projeto e informações de progresso.
     
-    Shows pipeline state, artifact status, quality metrics, and execution history.
+    Mostra estado do pipeline, status dos artefatos, métricas de qualidade e histórico de execução.
     
-    Examples:
+    Exemplos:
         mare status
         mare status --detailed --quality
         mare status --artifacts
@@ -199,10 +199,10 @@ def status(ctx, detailed, artifacts, quality):
     try:
         status_command(ctx, detailed, artifacts, quality)
     except MAREException as e:
-        console.print(f"[red]Error:[/red] {e}")
+        console.print(f"[red]Erro:[/red] {e}")
         sys.exit(1)
     except Exception as e:
-        console.print(f"[red]Unexpected error:[/red] {e}")
+        console.print(f"[red]Erro inesperado:[/red] {e}")
         if ctx.obj.get('debug'):
             raise
         sys.exit(1)
@@ -216,56 +216,56 @@ def status(ctx, detailed, artifacts, quality):
 @click.option(
     '--output', '-o',
     type=click.Path(),
-    help='Output file path'
+    help='Caminho do arquivo de saída'
 )
 @click.option(
     '--template',
     type=click.Path(exists=True),
-    help='Custom template file for formatting'
+    help='Arquivo de template personalizado para formatação'
 )
 @click.option(
     '--include-metadata',
     is_flag=True,
-    help='Include metadata and traceability information'
+    help='Inclui metadados e informações de rastreabilidade'
 )
 @click.option(
     '--quality-report',
     is_flag=True,
-    help='Include quality analysis report'
+    help='Inclui relatório de análise de qualidade'
 )
 @click.pass_context
 def export(ctx, format, output, template, include_metadata, quality_report):
     """
-    Export project results in the specified format.
+    Exporta resultados do projeto no formato especificado.
     
-    Generates final documentation, specifications, or reports from the
-    processed requirements and artifacts.
+    Gera documentação final, especificações ou relatórios a partir dos
+    requisitos processados e artefatos.
     
-    Examples:
+    Exemplos:
         mare export json
-        mare export markdown --output requirements.md
-        mare export pdf --template custom_template.html --include-metadata
+        mare export markdown --output requisitos.md
+        mare export pdf --template template_personalizado.html --include-metadata
     """
     try:
         export_command(ctx, format, output, template, include_metadata, quality_report)
     except MAREException as e:
-        console.print(f"[red]Error:[/red] {e}")
+        console.print(f"[red]Erro:[/red] {e}")
         sys.exit(1)
     except Exception as e:
-        console.print(f"[red]Unexpected error:[/red] {e}")
+        console.print(f"[red]Erro inesperado:[/red] {e}")
         if ctx.obj.get('debug'):
             raise
         sys.exit(1)
 
 def main():
-    """Main entry point for the MARE CLI application."""
+    """Ponto de entrada principal para a aplicação MARE CLI."""
     try:
         cli()
     except KeyboardInterrupt:
-        console.print("\n[yellow]Operation cancelled by user[/yellow]")
+        console.print("\n[yellow]Operação cancelada pelo usuário[/yellow]")
         sys.exit(130)
     except Exception as e:
-        console.print(f"[red]Fatal error:[/red] {e}")
+        console.print(f"[red]Erro fatal:[/red] {e}")
         sys.exit(1)
 
 if __name__ == "__main__":

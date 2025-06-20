@@ -1,6 +1,6 @@
 """
-MARE CLI - Collector Agent Implementation
-Agent responsible for collecting requirements through questioning and drafting
+MARE CLI - Implementação do Agente Collector
+Agente responsável por coletar requisitos através de questionamento e rascunhos
 """
 
 from typing import Any, Dict, List
@@ -9,26 +9,26 @@ from mare.agents.base import AbstractAgent, AgentRole, ActionType, AgentConfig
 
 class CollectorAgent(AbstractAgent):
     """
-    Collector Agent implementation.
+    Implementação do Agente Collector.
     
-    This agent is responsible for:
-    - Proposing questions to clarify requirements (ProposeQuestion)
-    - Writing requirement drafts based on collected information (WriteReqDraft)
+    Este agente é responsável por:
+    - Propor perguntas para esclarecer requisitos (ProposeQuestion)
+    - Escrever rascunhos de requisitos baseados em informações coletadas (WriteReqDraft)
     """
     
     def __init__(self, config: AgentConfig):
-        """Initialize the Collector Agent."""
-        # Ensure the role is set correctly
+        """Inicializa o Agente Collector."""
+        # Garante que o papel está definido corretamente
         config.role = AgentRole.COLLECTOR
         
-        # Set default system prompt if not provided
+        # Define prompt do sistema padrão se não fornecido
         if not config.system_prompt:
             config.system_prompt = self.get_system_prompt()
         
         super().__init__(config)
     
     def can_perform_action(self, action_type: ActionType) -> bool:
-        """Check if this agent can perform the specified action."""
+        """Verifica se este agente pode executar a ação especificada."""
         allowed_actions = {
             ActionType.PROPOSE_QUESTION,
             ActionType.WRITE_REQ_DRAFT
@@ -36,78 +36,78 @@ class CollectorAgent(AbstractAgent):
         return action_type in allowed_actions
     
     def get_system_prompt(self) -> str:
-        """Get the system prompt for the Collector Agent."""
-        return """You are an experienced requirements collector in a software engineering process. Your role is to:
+        """Obtém o prompt do sistema para o Agente Collector."""
+        return """Você é um coletor de requisitos experiente em um processo de engenharia de software. Seu papel é:
 
-1. Analyze user stories and initial requirements to identify gaps and ambiguities
-2. Propose strategic questions that will help clarify and refine requirements
-3. Write comprehensive requirement drafts based on collected information
-4. Ensure requirements are complete, clear, and actionable
+1. Analisar user stories e requisitos iniciais para identificar lacunas e ambiguidades
+2. Propor perguntas estratégicas que ajudem a esclarecer e refinar requisitos
+3. Escrever rascunhos de requisitos abrangentes baseados em informações coletadas
+4. Garantir que os requisitos sejam completos, claros e acionáveis
 
-Guidelines for questioning:
-- Ask specific, targeted questions that address gaps in understanding
-- Focus on clarifying functional and non-functional requirements
-- Identify edge cases and exceptional scenarios
-- Explore user workflows and business processes
-- Clarify data requirements and system interfaces
+Diretrizes para questionamento:
+- Faça perguntas específicas e direcionadas que abordem lacunas no entendimento
+- Foque em esclarecer requisitos funcionais e não-funcionais
+- Identifique casos extremos e cenários excepcionais
+- Explore fluxos de trabalho do usuário e processos de negócio
+- Esclareça requisitos de dados e interfaces do sistema
 
-Guidelines for requirement drafts:
-- Write clear, unambiguous requirement statements
-- Use structured format with unique identifiers
-- Include acceptance criteria where appropriate
-- Organize requirements logically by feature or component
-- Ensure traceability to original user stories
+Diretrizes para rascunhos de requisitos:
+- Escreva declarações de requisitos claras e não ambíguas
+- Use formato estruturado com identificadores únicos
+- Inclua critérios de aceitação quando apropriado
+- Organize requisitos logicamente por funcionalidade ou componente
+- Garanta rastreabilidade às user stories originais
 
-Your goal is to transform high-level user needs into detailed, implementable requirements."""
+Seu objetivo é transformar necessidades de alto nível dos usuários em requisitos detalhados e implementáveis."""
     
     def _execute_specific_action(
         self, 
         action_type: ActionType, 
         input_data: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Execute a specific action implementation."""
+        """Executa uma implementação de ação específica."""
         
         if action_type == ActionType.PROPOSE_QUESTION:
             return self._propose_question(input_data)
         elif action_type == ActionType.WRITE_REQ_DRAFT:
             return self._write_req_draft(input_data)
         else:
-            raise ValueError(f"Unsupported action type: {action_type}")
+            raise ValueError(f"Tipo de ação não suportado: {action_type}")
     
     def _propose_question(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Propose questions to clarify requirements.
+        Propõe perguntas para esclarecer requisitos.
         
         Args:
-            input_data: Should contain 'user_stories' or 'requirements'
+            input_data: Deve conter 'user_stories' ou 'requirements'
             
         Returns:
-            Dictionary containing proposed questions
+            Dicionário contendo perguntas propostas
         """
         user_stories = input_data.get('user_stories', '')
         requirements = input_data.get('requirements', '')
-        domain = input_data.get('domain', 'general software system')
-        focus_area = input_data.get('focus_area', 'general')
+        domain = input_data.get('domain', 'sistema de software geral')
+        focus_area = input_data.get('focus_area', 'geral')
         
-        prompt_template = """Analyze the following user stories and requirements to identify areas that need clarification. Propose specific, strategic questions that will help refine and complete the requirements.
+        prompt_template = """Analise as seguintes user stories e requisitos para identificar áreas que precisam de esclarecimento. Proponha perguntas específicas e estratégicas que ajudem a refinar e completar os requisitos.
 
 User Stories: {user_stories}
-Current Requirements: {requirements}
-Domain: {domain}
-Focus Area: {focus_area}
+Requisitos Atuais: {requirements}
+Domínio: {domain}
+Área de Foco: {focus_area}
 
-Please provide:
-1. 3-5 specific questions that address the most important gaps or ambiguities
-2. For each question, explain why it's important and what information it will help clarify
-3. Prioritize questions that will have the most impact on system design and implementation
-4. Consider functional requirements, non-functional requirements, constraints, and edge cases
+Por favor forneça:
+1. 3-5 perguntas específicas que abordem as lacunas ou ambiguidades mais importantes
+2. Para cada pergunta, explique por que é importante e que informação ajudará a esclarecer
+3. Priorize perguntas que terão maior impacto no design e implementação do sistema
+4. Considere requisitos funcionais, requisitos não-funcionais, restrições e casos extremos
 
-Format your response as:
-Question 1: [question]
-Rationale: [why this question is important]
+Formate sua resposta como:
+Pergunta 1: [pergunta]
+Justificativa: [por que esta pergunta é importante]
 
-Question 2: [question]
-Rationale: [why this question is important]
+Pergunta 2: [pergunta]
+Justificativa: [por que esta pergunta é importante]
 
 etc."""
         
@@ -129,56 +129,56 @@ etc."""
     
     def _write_req_draft(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Write requirement drafts based on collected information.
+        Escreve rascunhos de requisitos baseados nas informações coletadas.
         
         Args:
-            input_data: Should contain 'user_stories', 'qa_pairs', etc.
+            input_data: Deve conter 'user_stories', 'qa_pairs', etc.
             
         Returns:
-            Dictionary containing requirement draft
+            Dicionário contendo rascunho de requisitos
         """
         user_stories = input_data.get('user_stories', '')
         qa_pairs = input_data.get('qa_pairs', '')
-        domain = input_data.get('domain', 'general software system')
+        domain = input_data.get('domain', 'sistema de software geral')
         additional_context = input_data.get('additional_context', '')
         
-        prompt_template = """Based on the user stories and question-answer pairs, write a comprehensive requirements draft. Transform the high-level needs into detailed, implementable requirements.
+        prompt_template = """Com base nas user stories e pares de pergunta-resposta, escreva um rascunho abrangente de requisitos. Transforme as necessidades de alto nível em requisitos detalhados e implementáveis.
 
 User Stories: {user_stories}
 
-Question-Answer Pairs: {qa_pairs}
+Pares Pergunta-Resposta: {qa_pairs}
 
-Domain: {domain}
+Domínio: {domain}
 
-Additional Context: {additional_context}
+Contexto Adicional: {additional_context}
 
-Please provide:
-1. Functional Requirements (numbered FR-001, FR-002, etc.)
-   - Clear, testable requirement statements
-   - Acceptance criteria for each requirement
-   - Priority level (High/Medium/Low)
+Por favor forneça:
+1. Requisitos Funcionais (numerados RF-001, RF-002, etc.)
+   - Declarações de requisitos claras e testáveis
+   - Critérios de aceitação para cada requisito
+   - Nível de prioridade (Alta/Média/Baixa)
 
-2. Non-Functional Requirements (numbered NFR-001, NFR-002, etc.)
-   - Performance, security, usability, etc.
-   - Measurable criteria where possible
+2. Requisitos Não-Funcionais (numerados RNF-001, RNF-002, etc.)
+   - Performance, segurança, usabilidade, etc.
+   - Critérios mensuráveis quando possível
 
-3. System Constraints and Assumptions
-   - Technical constraints
-   - Business constraints
-   - Key assumptions made
+3. Restrições e Suposições do Sistema
+   - Restrições técnicas
+   - Restrições de negócio
+   - Principais suposições feitas
 
-4. Data Requirements
-   - Key data entities and attributes
-   - Data validation rules
-   - Data relationships
+4. Requisitos de Dados
+   - Principais entidades de dados e atributos
+   - Regras de validação de dados
+   - Relacionamentos de dados
 
-Format each requirement clearly with:
-- Unique ID
-- Title
-- Description
-- Acceptance Criteria
-- Priority
-- Source (which user story or Q&A it derives from)"""
+Formate cada requisito claramente com:
+- ID único
+- Título
+- Descrição
+- Critérios de Aceitação
+- Prioridade
+- Origem (de qual user story ou Q&A deriva)"""
         
         prompt = self._format_prompt(prompt_template, {
             'user_stories': user_stories,

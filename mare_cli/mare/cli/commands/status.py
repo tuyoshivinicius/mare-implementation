@@ -1,6 +1,6 @@
 """
-MARE CLI - Status command implementation
-Handles project status display and monitoring
+MARE CLI - Implementação do comando status
+Gerencia exibição de status e monitoramento do projeto
 """
 
 from pathlib import Path
@@ -25,27 +25,27 @@ def status_command(
     quality: bool
 ) -> None:
     """
-    Display project status information.
+    Exibe informações de status do projeto.
     
     Args:
-        ctx: Click context object
-        detailed: Show detailed information
-        artifacts: List all artifacts
-        quality: Show quality metrics
+        ctx: Objeto de contexto do Click
+        detailed: Mostra informações detalhadas
+        artifacts: Lista todos os artefatos
+        quality: Mostra métricas de qualidade
     """
-    logger.info("Displaying project status")
+    logger.info("Exibindo status do projeto")
     
-    # Find project root
+    # Encontra raiz do projeto
     project_root = find_project_root()
     if not project_root:
         raise WorkspaceError(
-            "No MARE project found. Run 'mare init' to create a new project."
+            "Nenhum projeto MARE encontrado. Execute 'mare init' para criar um novo projeto."
         )
     
-    # Validate project structure
+    # Valida estrutura do projeto
     if not validate_project_structure(project_root):
         raise WorkspaceError(
-            "Invalid project structure. Please check your project configuration."
+            "Estrutura de projeto inválida. Verifique a configuração do seu projeto."
         )
     
     try:
@@ -66,6 +66,14 @@ def status_command(
             _display_quality_metrics(executor)
         
         logger.info("Status display completed")
+        
+        # Return status information for testing
+        return {
+            "project_name": project_root.name,
+            "project_path": str(project_root),
+            "configuration": project_status.get("configuration", {}),
+            "status": "displayed"
+        }
         
     except Exception as e:
         logger.error(f"Failed to get project status: {e}")

@@ -1,6 +1,6 @@
 """
-MARE CLI - Logging utilities
-Provides structured logging configuration for the MARE CLI application
+MARE CLI - Utilitários de logging
+Fornece configuração de logging estruturado para a aplicação MARE CLI
 """
 
 import logging
@@ -10,7 +10,7 @@ from typing import Optional
 from rich.logging import RichHandler
 from rich.console import Console
 
-# Global console instance
+# Instância global do console
 console = Console()
 
 def setup_logging(
@@ -19,28 +19,28 @@ def setup_logging(
     format_string: Optional[str] = None
 ) -> logging.Logger:
     """
-    Setup structured logging for MARE CLI.
+    Configura logging estruturado para o MARE CLI.
     
     Args:
-        level: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-        log_file: Optional file path for log output
-        format_string: Custom format string for log messages
+        level: Nível de logging (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+        log_file: Caminho opcional do arquivo para saída de log
+        format_string: String de formato customizada para mensagens de log
     
     Returns:
-        Configured logger instance
+        Instância de logger configurada
     """
-    # Default format string
+    # String de formato padrão
     if format_string is None:
         format_string = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     
-    # Create root logger
+    # Criar logger raiz
     logger = logging.getLogger("mare")
     logger.setLevel(level)
     
-    # Clear existing handlers
+    # Limpar handlers existentes
     logger.handlers.clear()
     
-    # Add rich handler for console output
+    # Adicionar handler rich para saída do console
     rich_handler = RichHandler(
         console=console,
         show_time=True,
@@ -51,7 +51,7 @@ def setup_logging(
     rich_handler.setLevel(level)
     logger.addHandler(rich_handler)
     
-    # Add file handler if specified
+    # Adicionar handler de arquivo se especificado
     if log_file:
         log_file.parent.mkdir(parents=True, exist_ok=True)
         file_handler = logging.FileHandler(log_file)
@@ -64,39 +64,39 @@ def setup_logging(
 
 def get_logger(name: str) -> logging.Logger:
     """
-    Get a logger instance for a specific module.
+    Obtém uma instância de logger para um módulo específico.
     
     Args:
-        name: Logger name (typically __name__)
+        name: Nome do logger (tipicamente __name__)
     
     Returns:
-        Logger instance
+        Instância do logger
     """
     return logging.getLogger(f"mare.{name}")
 
 class MARELoggerMixin:
     """
-    Mixin class that provides logging capabilities to other classes.
+    Classe mixin que fornece capacidades de logging para outras classes.
     """
     
     @property
     def logger(self) -> logging.Logger:
-        """Get logger instance for this class."""
+        """Obtém instância de logger para esta classe."""
         return get_logger(self.__class__.__module__)
     
     def log_info(self, message: str, **kwargs) -> None:
-        """Log info message with optional context."""
+        """Registra mensagem de info com contexto opcional."""
         self.logger.info(message, extra=kwargs)
     
     def log_warning(self, message: str, **kwargs) -> None:
-        """Log warning message with optional context."""
+        """Registra mensagem de warning com contexto opcional."""
         self.logger.warning(message, extra=kwargs)
     
     def log_error(self, message: str, **kwargs) -> None:
-        """Log error message with optional context."""
+        """Registra mensagem de erro com contexto opcional."""
         self.logger.error(message, extra=kwargs)
     
     def log_debug(self, message: str, **kwargs) -> None:
-        """Log debug message with optional context."""
+        """Registra mensagem de debug com contexto opcional."""
         self.logger.debug(message, extra=kwargs)
 

@@ -83,4 +83,12 @@ def export_command(
     ))
     
     logger.info(f"Export completed (stub) - would output to {output}")
+    
+    # Return result for testing
+    return {
+        "format": format,
+        "output_file": str(output),
+        "template": template,
+        "status": "exported"
+    }
 

@@ -1,6 +1,6 @@
 """
-MARE CLI - Custom exceptions
-Defines custom exception classes for the MARE CLI application
+MARE CLI - Exceções customizadas
+Define classes de exceção customizadas para a aplicação MARE CLI
 """
 
 from typing import Optional, Dict, Any
@@ -8,9 +8,9 @@ from typing import Optional, Dict, Any
 
 class MAREException(Exception):
     """
-    Base exception class for all MARE CLI errors.
+    Classe base de exceção para todos os erros do MARE CLI.
     
-    Provides structured error handling with context information.
+    Fornece tratamento estruturado de erros com informações de contexto.
     """
     
     def __init__(
@@ -27,12 +27,12 @@ class MAREException(Exception):
     def __str__(self) -> str:
         if self.context:
             context_str = ", ".join(f"{k}={v}" for k, v in self.context.items())
-            return f"{self.message} (Code: {self.error_code}, Context: {context_str})"
-        return f"{self.message} (Code: {self.error_code})"
+            return f"{self.message} (Código: {self.error_code}, Contexto: {context_str})"
+        return f"{self.message} (Código: {self.error_code})"
 
 
 class ProjectInitializationError(MAREException):
-    """Raised when project initialization fails."""
+    """Lançada quando a inicialização do projeto falha."""
     
     def __init__(self, message: str, project_path: Optional[str] = None):
         super().__init__(
@@ -43,7 +43,7 @@ class ProjectInitializationError(MAREException):
 
 
 class ConfigurationError(MAREException):
-    """Raised when configuration is invalid or missing."""
+    """Lançada quando a configuração é inválida ou está ausente."""
     
     def __init__(self, message: str, config_file: Optional[str] = None):
         super().__init__(
@@ -54,7 +54,7 @@ class ConfigurationError(MAREException):
 
 
 class WorkspaceError(MAREException):
-    """Raised when workspace operations fail."""
+    """Lançada quando operações do workspace falham."""
     
     def __init__(self, message: str, workspace_path: Optional[str] = None):
         super().__init__(
@@ -65,7 +65,7 @@ class WorkspaceError(MAREException):
 
 
 class AgentExecutionError(MAREException):
-    """Raised when agent execution fails."""
+    """Lançada quando a execução do agente falha."""
     
     def __init__(
         self, 
@@ -87,7 +87,7 @@ class AgentExecutionError(MAREException):
 
 
 class PipelineExecutionError(MAREException):
-    """Raised when pipeline execution fails."""
+    """Lançada quando a execução do pipeline falha."""
     
     def __init__(
         self, 

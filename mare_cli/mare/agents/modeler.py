@@ -1,6 +1,6 @@
 """
-MARE CLI - Modeler Agent Implementation
-Agent responsible for extracting entities and relationships from requirements
+MARE CLI - Implementação do Agente Modeler
+Agente responsável por extrair entidades e relacionamentos dos requisitos
 """
 
 from typing import Any, Dict, List
@@ -9,26 +9,26 @@ from mare.agents.base import AbstractAgent, AgentRole, ActionType, AgentConfig
 
 class ModelerAgent(AbstractAgent):
     """
-    Modeler Agent implementation.
+    Implementação do Agente Modeler.
     
-    This agent is responsible for:
-    - Extracting entities from requirements (ExtractEntity)
-    - Extracting relationships between entities (ExtractRelation)
+    Este agente é responsável por:
+    - Extrair entidades dos requisitos (ExtractEntity)
+    - Extrair relacionamentos entre entidades (ExtractRelation)
     """
     
     def __init__(self, config: AgentConfig):
-        """Initialize the Modeler Agent."""
-        # Ensure the role is set correctly
+        """Inicializa o Agente Modeler."""
+        # Garante que o papel está definido corretamente
         config.role = AgentRole.MODELER
         
-        # Set default system prompt if not provided
+        # Define prompt do sistema padrão se não fornecido
         if not config.system_prompt:
             config.system_prompt = self.get_system_prompt()
         
         super().__init__(config)
     
     def can_perform_action(self, action_type: ActionType) -> bool:
-        """Check if this agent can perform the specified action."""
+        """Verifica se este agente pode executar a ação especificada."""
         allowed_actions = {
             ActionType.EXTRACT_ENTITY,
             ActionType.EXTRACT_RELATION
@@ -36,25 +36,25 @@ class ModelerAgent(AbstractAgent):
         return action_type in allowed_actions
     
     def get_system_prompt(self) -> str:
-        """Get the system prompt for the Modeler Agent."""
-        return """You are an experienced requirements modeler specializing in extracting structured information from requirements documents. Your role is to:
+        """Obtém o prompt do sistema para o Agente Modeler."""
+        return """Você é um modelador de requisitos experiente especializado em extrair informações estruturadas de documentos de requisitos. Seu papel é:
 
-1. Identify and extract key entities (actors, systems, data objects, processes) from requirements
-2. Determine relationships between entities (associations, dependencies, compositions)
-3. Create structured models that represent the system's conceptual architecture
-4. Ensure completeness and consistency in the extracted model
+1. Identificar e extrair entidades-chave (atores, sistemas, objetos de dados, processos) dos requisitos
+2. Determinar relacionamentos entre entidades (associações, dependências, composições)
+3. Criar modelos estruturados que representem a arquitetura conceitual do sistema
+4. Garantir completude e consistência no modelo extraído
 
-Guidelines for entity extraction:
-- Identify different types of entities: Actors (users, external systems), Data Objects (entities, files, databases), Processes (functions, services, workflows), System Components
-- For each entity, determine: Name, Type, Description, Attributes, Constraints
-- Consider both explicit entities mentioned in requirements and implicit ones that are necessary
+Diretrizes para extração de entidades:
+- Identifique diferentes tipos de entidades: Atores (usuários, sistemas externos), Objetos de Dados (entidades, arquivos, bancos de dados), Processos (funções, serviços, fluxos de trabalho), Componentes do Sistema
+- Para cada entidade, determine: Nome, Tipo, Descrição, Atributos, Restrições
+- Considere tanto entidades explícitas mencionadas nos requisitos quanto implícitas que são necessárias
 
-Guidelines for relationship extraction:
-- Identify relationship types: Association (uses, interacts with), Composition (contains, consists of), Dependency (depends on, requires), Inheritance (is a type of), Flow (data flow, control flow)
-- For each relationship, specify: Source entity, Target entity, Relationship type, Cardinality, Description
-- Consider both direct relationships and derived relationships
+Diretrizes para extração de relacionamentos:
+- Identifique tipos de relacionamento: Associação (usa, interage com), Composição (contém, consiste de), Dependência (depende de, requer), Herança (é um tipo de), Fluxo (fluxo de dados, fluxo de controle)
+- Para cada relacionamento, especifique: Entidade origem, Entidade destino, Tipo de relacionamento, Cardinalidade, Descrição
+- Considere tanto relacionamentos diretos quanto relacionamentos derivados
 
-Your output should be structured, precise, and suitable for creating system models and diagrams."""
+Sua saída deve ser estruturada, precisa e adequada para criar modelos e diagramas do sistema."""
     
     def _execute_specific_action(
         self, 
@@ -84,51 +84,51 @@ Your output should be structured, precise, and suitable for creating system mode
         domain = input_data.get('domain', 'general software system')
         focus_type = input_data.get('focus_type', 'all')  # all, actors, data, processes, systems
         
-        prompt_template = """Analyze the following requirements and extract all relevant entities. Focus on identifying the key components that will be part of the system model.
+        prompt_template = """Analise os seguintes requisitos e extraia todas as entidades relevantes. Foque em identificar os componentes-chave que farão parte do modelo do sistema.
 
-Requirements: {requirements}
-Domain: {domain}
-Focus Type: {focus_type}
+Requisitos: {requirements}
+Domínio: {domain}
+Tipo de Foco: {focus_type}
 
-Please extract entities in the following categories:
+Por favor extraia entidades nas seguintes categorias:
 
-1. ACTORS (Users, External Systems, Stakeholders)
-   - Name: [entity name]
-   - Type: Actor
-   - Description: [brief description]
-   - Attributes: [key characteristics]
-   - Role: [what they do in the system]
+1. ATORES (Usuários, Sistemas Externos, Stakeholders)
+   - Nome: [nome da entidade]
+   - Tipo: Ator
+   - Descrição: [breve descrição]
+   - Atributos: [características principais]
+   - Papel: [o que fazem no sistema]
 
-2. DATA OBJECTS (Entities, Files, Databases, Information)
-   - Name: [entity name]
-   - Type: Data Object
-   - Description: [what it represents]
-   - Attributes: [key data fields/properties]
-   - Constraints: [validation rules, business rules]
+2. OBJETOS DE DADOS (Entidades, Arquivos, Bancos de Dados, Informações)
+   - Nome: [nome da entidade]
+   - Tipo: Objeto de Dados
+   - Descrição: [o que representa]
+   - Atributos: [campos/propriedades principais de dados]
+   - Restrições: [regras de validação, regras de negócio]
 
-3. PROCESSES (Functions, Services, Workflows, Operations)
-   - Name: [entity name]
-   - Type: Process
-   - Description: [what it does]
-   - Inputs: [what it takes as input]
-   - Outputs: [what it produces]
-   - Triggers: [what initiates it]
+3. PROCESSOS (Funções, Serviços, Fluxos de Trabalho, Operações)
+   - Nome: [nome da entidade]
+   - Tipo: Processo
+   - Descrição: [o que faz]
+   - Entradas: [o que recebe como entrada]
+   - Saídas: [o que produz]
+   - Gatilhos: [o que o inicia]
 
-4. SYSTEM COMPONENTS (Modules, Services, Interfaces)
-   - Name: [entity name]
-   - Type: System Component
-   - Description: [its purpose and functionality]
-   - Responsibilities: [what it's responsible for]
-   - Interfaces: [how it connects to other components]
+4. COMPONENTES DO SISTEMA (Módulos, Serviços, Interfaces)
+   - Nome: [nome da entidade]
+   - Tipo: Componente do Sistema
+   - Descrição: [seu propósito e funcionalidade]
+   - Responsabilidades: [pelo que é responsável]
+   - Interfaces: [como se conecta a outros componentes]
 
-For each entity, ensure you provide:
-- A unique, descriptive name
-- Clear categorization
-- Comprehensive description
-- Relevant attributes or properties
-- Any constraints or business rules
+Para cada entidade, certifique-se de fornecer:
+- Um nome único e descritivo
+- Categorização clara
+- Descrição abrangente
+- Atributos ou propriedades relevantes
+- Quaisquer restrições ou regras de negócio
 
-Focus on entities that are essential for understanding and implementing the system."""
+Foque em entidades que são essenciais para entender e implementar o sistema."""
         
         prompt = self._format_prompt(prompt_template, {
             'requirements': requirements,
@@ -148,78 +148,78 @@ Focus on entities that are essential for understanding and implementing the syst
     
     def _extract_relation(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Extract relationships between entities.
+        Extrai relacionamentos entre entidades.
         
         Args:
-            input_data: Should contain 'entities' and 'requirements'
+            input_data: Deve conter 'entities' e 'requirements'
             
         Returns:
-            Dictionary containing extracted relationships
+            Dicionário contendo relacionamentos extraídos
         """
         entities = input_data.get('entities', '')
         requirements = input_data.get('requirements', '')
         domain = input_data.get('domain', 'general software system')
         relationship_types = input_data.get('relationship_types', 'all')
         
-        prompt_template = """Based on the extracted entities and requirements, identify and extract relationships between entities. Focus on creating a comprehensive relationship model.
+        prompt_template = """Com base nas entidades extraídas e requisitos, identifique e extraia relacionamentos entre entidades. Foque em criar um modelo de relacionamento abrangente.
 
-Extracted Entities: {entities}
+Entidades Extraídas: {entities}
 
-Requirements: {requirements}
+Requisitos: {requirements}
 
-Domain: {domain}
+Domínio: {domain}
 
-Relationship Types to Focus On: {relationship_types}
+Tipos de Relacionamento para Focar: {relationship_types}
 
-Please identify relationships in the following categories:
+Por favor identifique relacionamentos nas seguintes categorias:
 
-1. ASSOCIATION RELATIONSHIPS (uses, interacts with, accesses)
-   - Source Entity: [entity name]
-   - Target Entity: [entity name]
-   - Relationship Type: Association
-   - Relationship Name: [specific relationship, e.g., "uses", "manages", "views"]
-   - Cardinality: [1:1, 1:many, many:many]
-   - Description: [how they are related]
+1. RELACIONAMENTOS DE ASSOCIAÇÃO (usa, interage com, acessa)
+   - Entidade Origem: [nome da entidade]
+   - Entidade Destino: [nome da entidade]
+   - Tipo de Relacionamento: Associação
+   - Nome do Relacionamento: [relacionamento específico, ex: "usa", "gerencia", "visualiza"]
+   - Cardinalidade: [1:1, 1:muitos, muitos:muitos]
+   - Descrição: [como estão relacionados]
 
-2. COMPOSITION RELATIONSHIPS (contains, consists of, includes)
-   - Source Entity: [container entity]
-   - Target Entity: [contained entity]
-   - Relationship Type: Composition
-   - Relationship Name: [e.g., "contains", "includes"]
-   - Cardinality: [how many of target in source]
-   - Description: [nature of containment]
+2. RELACIONAMENTOS DE COMPOSIÇÃO (contém, consiste de, inclui)
+   - Entidade Origem: [entidade contêiner]
+   - Entidade Destino: [entidade contida]
+   - Tipo de Relacionamento: Composição
+   - Nome do Relacionamento: [ex: "contém", "inclui"]
+   - Cardinalidade: [quantos do destino na origem]
+   - Descrição: [natureza da contenção]
 
-3. DEPENDENCY RELATIONSHIPS (depends on, requires, needs)
-   - Source Entity: [dependent entity]
-   - Target Entity: [dependency entity]
-   - Relationship Type: Dependency
-   - Relationship Name: [e.g., "depends on", "requires"]
-   - Strength: [strong, weak]
-   - Description: [nature of dependency]
+3. RELACIONAMENTOS DE DEPENDÊNCIA (depende de, requer, precisa)
+   - Entidade Origem: [entidade dependente]
+   - Entidade Destino: [entidade de dependência]
+   - Tipo de Relacionamento: Dependência
+   - Nome do Relacionamento: [ex: "depende de", "requer"]
+   - Força: [forte, fraca]
+   - Descrição: [natureza da dependência]
 
-4. INHERITANCE RELATIONSHIPS (is a type of, specializes)
-   - Source Entity: [specialized entity]
-   - Target Entity: [general entity]
-   - Relationship Type: Inheritance
-   - Relationship Name: "is a type of"
-   - Description: [how source specializes target]
+4. RELACIONAMENTOS DE HERANÇA (é um tipo de, especializa)
+   - Entidade Origem: [entidade especializada]
+   - Entidade Destino: [entidade geral]
+   - Tipo de Relacionamento: Herança
+   - Nome do Relacionamento: "é um tipo de"
+   - Descrição: [como origem especializa destino]
 
-5. FLOW RELATIONSHIPS (data flow, control flow, communication)
-   - Source Entity: [origin]
-   - Target Entity: [destination]
-   - Relationship Type: Flow
-   - Flow Type: [data, control, message]
-   - Flow Content: [what flows between them]
-   - Direction: [unidirectional, bidirectional]
+5. RELACIONAMENTOS DE FLUXO (fluxo de dados, fluxo de controle, comunicação)
+   - Entidade Origem: [origem]
+   - Entidade Destino: [destino]
+   - Tipo de Relacionamento: Fluxo
+   - Tipo de Fluxo: [dados, controle, mensagem]
+   - Conteúdo do Fluxo: [o que flui entre eles]
+   - Direção: [unidirecional, bidirecional]
 
-For each relationship, provide:
-- Clear identification of source and target entities
-- Specific relationship type and name
-- Cardinality or multiplicity where applicable
-- Description of the relationship's nature and purpose
-- Any constraints or conditions on the relationship
+Para cada relacionamento, forneça:
+- Identificação clara das entidades origem e destino
+- Tipo e nome específico do relacionamento
+- Cardinalidade ou multiplicidade quando aplicável
+- Descrição da natureza e propósito do relacionamento
+- Quaisquer restrições ou condições no relacionamento
 
-Ensure relationships are consistent with the requirements and make logical sense in the domain context."""
+Garanta que os relacionamentos sejam consistentes com os requisitos e façam sentido lógico no contexto do domínio."""
         
         prompt = self._format_prompt(prompt_template, {
             'entities': entities,

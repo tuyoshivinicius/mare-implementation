@@ -270,8 +270,8 @@ class AbstractAgent(ABC, MARELoggerMixin):
             # Add the prompt as a human message
             messages = self._conversation_history + [HumanMessage(content=prompt)]
             
-            # Generate response
-            response = self._llm(messages)
+            # Generate response using invoke instead of deprecated __call__
+            response = self._llm.invoke(messages)
             
             # Add both prompt and response to conversation history
             self.add_message(HumanMessage(content=prompt))
